@@ -1,0 +1,84 @@
+{
+ "title": "What if you never went to the doctor?",
+ "voice": {
+  "provider": "cartesia",
+  "name": "Darius (Engaging Narrator)",
+  "voices": {
+   "cartesia": "23112795-d54e-4560-9568-791a87c30201"
+  }
+ },
+ "cast": {
+  "mom": {
+   "name": "Mom",
+   "voices": {
+    "cartesia": "d1d9c946-7cfc-4378-85a4-07d09827cb7e"
+   }
+  },
+  "doctor": {
+   "name": "Dr. Patel",
+   "voices": {
+    "cartesia": "aa2cafe9-97ba-4052-ac3c-875000f95212"
+   }
+  }
+ },
+ "lines": [
+  {
+   "text": "What if you never... ever... went to the doctor?",
+   "mood": "bright",
+   "emotion": "curious"
+  },
+  {
+   "text": "Year one. You feel great. Check-ups? Who needs them.",
+   "label": "YEAR 1",
+   "mood": "bright",
+   "emotion": "content"
+  },
+  {
+   "text": "Sweetie, you should really get that looked at.",
+   "speaker": "mom",
+   "mood": "bright",
+   "emotion": "sympathetic"
+  },
+  {
+   "text": "Year three. Your blood pressure is creeping up... and high blood pressure usually has no symptoms at all.",
+   "label": "YEAR 3",
+   "mood": "tense",
+   "emotion": "mysterious"
+  },
+  {
+   "text": "Year five. That tiny cavity you ignored? It's now a toothache you can't sleep through.",
+   "label": "YEAR 5",
+   "mood": "tense",
+   "emotion": "neutral"
+  },
+  {
+   "text": "Year ten. Something finally feels wrong. So you go.",
+   "label": "YEAR 10",
+   "mood": "eerie",
+   "emotion": "scared"
+  },
+  {
+   "text": "If we'd caught this five years ago, it would have been one simple prescription.",
+   "speaker": "doctor",
+   "mood": "calm",
+   "emotion": "sad"
+  },
+  {
+   "text": "Most serious problems are easiest to treat when they're caught early.",
+   "mood": "calm",
+   "emotion": "calm"
+  },
+  {
+   "text": "So book that check-up. Future you says thanks.",
+   "mood": "bright",
+   "emotion": "excited"
+  }
+ ],
+ "tail": 2.4,
+ "brand": {
+  "handle": "@BeanieExplains",
+  "name": "Beanie Explains",
+  "cta": "Follow for more what-ifs",
+  "endCard": 2.4
+ }
+}

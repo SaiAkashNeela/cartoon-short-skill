@@ -61,16 +61,21 @@ Copy the `cartoon-shorts/` folder into a skills directory, e.g. `~/.claude/skill
 project's `.claude/skills/`. Then ask Claude for something like *"make a what-if short about drinking only coffee for a week"*.
 
 Requirements on the machine that renders: Node 18+, `ffmpeg`, Python 3 with `numpy`, and Playwright with Chromium
-(`npm i playwright && npx playwright install chromium`, or set `CHROMIUM_PATH`). The voice comes from Cartesia
-(MCP connector) or the free offline Piper fallback.
+(`npm i playwright && npx playwright install chromium`, or set `CHROMIUM_PATH`).
+
+**Bring your own text-to-speech.** The pipeline only needs one audio file per script line, so any TTS works: a connected
+connector (Cartesia, ElevenLabs, …), a cloud API (ElevenLabs, OpenAI, Deepgram, Azure, Google, Amazon Polly) through
+`scripts/voice_lines.py`, a free local model (Piper is bundled, Kokoro or anything else via a command template), or your
+own recordings. Claude asks which one you use and remembers it per project. See `cartoon-shorts/references/voices.md`.
 
 ## Manual use
 
 ```bash
 S=cartoon-shorts
 $S/scripts/new_project.sh ~/my-short           # engine + example episode
-# write ~/my-short/script.json, put voice lines in ~/my-short/vo_raw/0.wav, 1.wav, ...
-#   (or generate them offline: $S/scripts/tts_piper.sh ~/my-short)
+# write ~/my-short/script.json, then one audio file per line in ~/my-short/vo_raw/0.wav, 1.wav, ... from any TTS:
+#   python3 $S/scripts/voice_lines.py ~/my-short --provider openai --voice ash     (key from $OPENAI_API_KEY)
+#   $S/scripts/tts_piper.sh ~/my-short                                             (free, offline)
 $S/scripts/prep_voice.sh ~/my-short
 (cd ~/my-short && python3 audio.py)            # timeline.json + audio.wav
 # write ~/my-short/episode.js (see cartoon-shorts/references/episode-api.md)
@@ -88,11 +93,12 @@ cartoon-shorts/
   engine/sets.js               the other locations: bedroom, kitchen, office, hospital, street, space, beach
   engine/render.mjs            headless Chromium frame capture -> ffmpeg
   engine/audio.py              word timings + procedural music/SFX mix
-  scripts/                     new_project, tts_piper, prep_voice, stills, render_all
+  scripts/                     new_project, voice_lines (any TTS), tts_piper, prep_voice, stills, render_all
   references/episode-api.md    poses, face params, environments, cameras
-  references/voices.md         Cartesia + Piper voice setup
+  references/voices.md         choosing a TTS: connectors, cloud APIs, local models, recordings
   examples/stopped-sleeping/   complete example episode
   examples/coffee-week/        second example: props (mug, cup pyramid) + SFX cues
+  examples/doctor/             third example: supporting cast, crowd, lip-synced dialogue
   references/*.jpg             set / pose / expression / outfit / lighting sheets (for Claude to look at)
 docs/
   images/                      README gallery
@@ -123,7 +129,8 @@ Nothing third-party is vendored in this repository; these are fetched or used at
 | [FFmpeg](https://ffmpeg.org) | LGPL/GPL (depends on your build) | encoding, run as an external program |
 | [Inter](https://github.com/rsms/inter) font | SIL OFL 1.1 | system font for captions, not bundled |
 | [Piper](https://github.com/rhasspy/piper) TTS | MIT | optional offline voice; each **voice model has its own licence**, so check the model card before publishing |
-| [Cartesia](https://cartesia.ai) voices | Cartesia's terms | optional hosted voice; generated audio is subject to your Cartesia plan's terms |
+| Your TTS provider (e.g. [Cartesia](https://cartesia.ai), ElevenLabs, OpenAI, Azure, Google, Polly, Deepgram) | the provider's terms | optional hosted voices; generated audio is subject to your plan's terms. The example episodes were voiced with Cartesia |
+| [Kokoro](https://github.com/hexgrad/kokoro) | Apache-2.0 | optional local voice |
 
 All music and sound effects are synthesized from scratch by `engine/audio.py`, so the output contains no third-party audio.
 You're responsible for the scripts and facts in videos you publish.

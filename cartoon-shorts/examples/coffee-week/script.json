@@ -2,8 +2,10 @@
  "title": "What if you drank only coffee for a week?",
  "voice": {
   "provider": "cartesia",
-  "voice_id": "23112795-d54e-4560-9568-791a87c30201",
-  "name": "Darius (Engaging Narrator)"
+  "name": "Darius (Engaging Narrator)",
+  "voices": {
+   "cartesia": "23112795-d54e-4560-9568-791a87c30201"
+  }
  },
  "lines": [
   {

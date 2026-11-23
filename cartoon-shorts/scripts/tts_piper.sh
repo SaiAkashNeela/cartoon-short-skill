@@ -10,7 +10,7 @@ IFS=- read -r LOC NAME QUAL <<< "$V"; LANG2="${LOC%%_*}"
 for f in "$V.onnx" "$V.onnx.json"; do
   [ -s "$CACHE/$f" ] || curl -sSL -o "$CACHE/$f" "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/$LANG2/$LOC/$NAME/$QUAL/$f"
 done
-# each cast member can have its own voice: script.json "cast": { "doctor": { "piper": "en_US-lessac-high" } }
+# each cast member can have its own voice: script.json "cast": { "doctor": { "voices": { "piper": "en_US-lessac-high" } } }
 python3 - "$CACHE" "$V" <<'PY'
 import json, os, subprocess, sys
 cache, default = sys.argv[1], sys.argv[2]
@@ -22,7 +22,8 @@ def model(v):
             subprocess.run(['curl', '-sSL', '-o', os.path.join(cache, f), f'https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/{lang}/{loc}/{name}/{qual}/{f}'], check=True)
     return os.path.join(cache, v + '.onnx')
 for i, l in enumerate(s['lines']):
-    v = (cast.get(l.get('speaker')) or {}).get('piper') or default
+    c = cast.get(l.get('speaker')) or {}
+    v = (c.get('voices') or {}).get('piper') or c.get('piper') or default
     subprocess.run([sys.executable, '-m', 'piper', '-m', model(v), '-f', f'vo_raw/{i}.wav', '--length-scale', '0.95', '--sentence-silence', '0.25'],
                    input=l['text'].encode(), check=True, capture_output=True)
     print('voiced line', i, 'with', v)

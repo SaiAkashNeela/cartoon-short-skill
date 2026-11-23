@@ -17,10 +17,11 @@ highlighted. Everything is deterministic code, so the same character looks ident
 The skill lives in this folder:
 - `engine/` — the reusable renderer (`scene.html`), frame capture (`render.mjs`), audio/timeline builder (`audio.py`)
 - `scripts/` — `new_project.sh`, `tts_piper.sh`, `prep_voice.sh`, `stills.sh`, `render_all.sh`
-- `examples/stopped-sleeping/`, `examples/coffee-week/` — complete working episodes (`script.json` + `episode.js`) to copy from;
-  the coffee one shows props (mug, cup pyramid), word-anchored SFX cues and a mug held through every pose
+- `examples/` — complete working episodes (`script.json` + `episode.js`) to copy from: `stopped-sleeping` (one character,
+  one set), `coffee-week` (five sets, props, word-anchored SFX) and `doctor` (a supporting cast, a street crowd, and two
+  characters who speak with lip sync)
 - `references/episode-api.md` — **read before writing `episode.js`**: poses, face params, envs, props, cameras
-- `references/voices.md` — Cartesia voice details and the free Piper fallback
+- `references/voices.md` — choosing a TTS provider (connected tools, cloud APIs, local models, own recordings), recipes, voices
 - `references/cast.jpg`, `sets.jpg`, `poses.jpg`, `faces.jpg`, `outfits.jpg`, `environments.jpg` — rendered sheets of every location, pose,
   expression, outfit preset and lighting look; view them when choreographing
 
@@ -63,8 +64,8 @@ from him entirely.
   and `height` (0.7 for a kid). Make roles readable at a glance: white coat + glasses = doctor, shirt + tie = boss,
   small + cap = kid. `references/cast.jpg` shows examples; `episode-api.md` lists every field.
 - **Who talks:** narration is the default. When a character should say something, write the line in their voice and
-  set `"speaker": "<name>"` on it. They get their own Cartesia voice (`script.json` `"cast": { "<name>": { "name": "Dr. Patel",
-  "voice_id": "…" } }`), their mouth moves with the audio automatically, and a name tag shows under the captions.
+  set `"speaker": "<name>"` on it. They get their own voice (`script.json` `"cast": { "<name>": { "name": "Dr. Patel",
+  "voices": { "<provider>": "…" } } }`), their mouth moves with the audio automatically, and a name tag shows under the captions.
   Keep most lines as narration; one or two spoken lines per video is plenty.
 - **Framing:** a portrait frame is narrow. Two people: stand them on `MARK.left` / `MARK.right` and shoot from z≈11. Groups:
   use `farLeft`/`farRight` and the `back*` marks and shoot from z≈14, or stagger people in depth. Turn people toward
@@ -110,9 +111,9 @@ Good Shorts scripts are short and visual:
   because a long video with a flat middle loses viewers. Plain spoken English; facts should be true (Shorts get
   fact-checked in the comments).
 - Optional per line: `label` (big pop-in text like "DAY 3"), `mood` (`bright` | `calm` | `eerie` | `tense`, drives
-  the music), `emotion` (passed to Cartesia), `speaker` (a cast name: that character says the line, lip-synced).
+  the music), `emotion` (a delivery hint for providers that support one), `speaker` (a cast name: that character says the line, lip-synced).
   Optional `sfx` cues: `{type: pop|whoosh|thud|ding|boing, line, at: start|end, offset}`. Optional `cast` metadata for
-  speakers: `{ "<name>": { "name": "Shown on the tag", "voice_id": "<cartesia id>", "piper": "<piper voice>" } }`.
+  speakers: `{ "<name>": { "name": "Shown on the tag", "voices": { "<provider>": "<voice for that provider>" } } }`.
 
 Copy the shape of `examples/stopped-sleeping/script.json`. Show the user the script before spending voice credits
 if they haven't already approved the topic/wording — it's cheap to change now and expensive after rendering.
@@ -124,13 +125,25 @@ $SKILL/scripts/new_project.sh <proj>          # copies engine + example, npm ins
 Then overwrite `<proj>/script.json` with your script (keep the example `episode.js` until step 4).
 
 ### 3. Voice → `vo_raw/<i>.wav`, then timeline
-- **Cartesia (preferred when the Cartesia MCP is connected):** one `text_to_speech` call per line with
-  `output_format {container: wav, encoding: pcm_s16le, sample_rate: 44100}`, `language: en`, and the line's
-  `emotion`; then `curl -sSL -o <proj>/vo_raw/<i>.wav <download_url>`. Default narrator: Darius
-  `23112795-d54e-4560-9568-791a87c30201`. Lines with a `speaker` use that character's `voice_id`; pick a voice that
-  clearly differs from the narrator (gender, age, accent). Details and alternatives in `references/voices.md`.
-- **Free fallback:** `$SKILL/scripts/tts_piper.sh <proj>` (offline neural voice, ~120 MB model download once; a cast
-  member's `piper` field gives them their own voice).
+The pipeline doesn't care which text-to-speech made the audio. Its only contract is **one audio file per script line**,
+`<proj>/vo_raw/<i>.wav` (or `.mp3`, any sample rate), where `<i>` is the line's index. So use whatever the user has.
+
+**Ask the user which TTS to use** before generating any audio, unless they've already said so in this conversation or
+the project's `script.json` names a provider (`"voice": { "provider": … }`). Offer what fits their setup:
+- a **connected TTS tool** in this session (e.g. a Cartesia or ElevenLabs connector): call it once per line, then download
+  each result into `vo_raw/`;
+- a **cloud API they have a key for**: ElevenLabs, OpenAI, Deepgram, Azure, Google or Amazon Polly. Run
+  `python3 $SKILL/scripts/voice_lines.py <proj> --provider <name>`, which reads the key from an environment variable;
+- a **free local model**: Piper (`$SKILL/scripts/tts_piper.sh <proj>`), Kokoro, or any other local TTS through
+  `voice_lines.py --provider command --cmd '… {text} … {out} …'`;
+- **their own recordings**: ask them to drop `0.wav, 1.wav, …` into `vo_raw/`.
+
+Never ask for an API key in chat or write one into a file. Keys stay in the user's environment or secret store.
+Paid providers charge per generation, so voice the script only after it's approved. Record the choice in
+`script.json` (`"voice": { "provider": "elevenlabs", "voices": { "elevenlabs": "<narrator id>" } }`, and the same
+`voices` map under each speaking cast member) so later episodes keep the same narrator and character voices.
+Lines with a `speaker` must use that character's voice, picked to clearly differ from the narrator (gender, age,
+accent). Provider recipes, voice suggestions and licence notes are in `references/voices.md`.
 
 ```bash
 SPEED=1.08 $SKILL/scripts/prep_voice.sh <proj>   # trims silence (+ optional pitch-safe speed-up) -> vo/<i>.wav

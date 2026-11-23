@@ -13,10 +13,19 @@ highlighted. Everything is deterministic code, so the same character looks ident
 The skill lives in this folder:
 - `engine/` — the reusable renderer (`scene.html`), frame capture (`render.mjs`), audio/timeline builder (`audio.py`)
 - `scripts/` — `new_project.sh`, `tts_piper.sh`, `prep_voice.sh`, `stills.sh`, `render_all.sh`
-- `examples/stopped-sleeping/` — a complete working episode (`script.json` + `episode.js`) to copy from
+- `examples/stopped-sleeping/`, `examples/coffee-week/` — complete working episodes (`script.json` + `episode.js`) to copy from;
+  the coffee one shows props (mug, cup pyramid), word-anchored SFX cues and a mug held through every pose
 - `references/episode-api.md` — **read before writing `episode.js`**: poses, face params, envs, props, cameras
 - `references/voices.md` — Cartesia voice details and the free Piper fallback
 - `references/poses.jpg`, `faces.jpg`, `outfits.jpg`, `environments.jpg` — rendered sheets of every pose, expression, outfit preset and lighting look; view them when choreographing
+
+## The character: Beanie, star of "Beanie Explains"
+
+The default character is **Beanie**: round white head, yellow beanie, blue hoodie (the `Classic` look). He is the
+recurring star of the user's channel **Beanie Explains**, so every episode uses the Classic outfit and the same narrator
+voice (Darius) unless the user asks otherwise. Viewers recognise a series by its character in the first half-second, and
+consistency matters more than variety here. The narration talks *about* "you"; Beanie is the one acting it out. Other
+outfits in `references/outfits.jpg` are for side characters or a different series.
 
 ## The model: one shot per narrated line
 
@@ -59,9 +68,10 @@ Then overwrite `<proj>/script.json` with your script (keep the example `episode.
 - **Free fallback:** `$SKILL/scripts/tts_piper.sh <proj>` (offline neural voice, ~120 MB model download once).
 
 ```bash
-$SKILL/scripts/prep_voice.sh <proj>     # trims silence -> vo/<i>.wav
+SPEED=1.08 $SKILL/scripts/prep_voice.sh <proj>   # trims silence (+ optional pitch-safe speed-up) -> vo/<i>.wav
 cd <proj> && python3 audio.py           # -> timeline.json (word timings, labels) + audio.wav (voice+music+sfx)
 ```
+Aim for 25–45 s; if the narration runs long, re-run `prep_voice.sh` with `SPEED=1.05–1.1` rather than re-voicing.
 `audio.py` prints each line's start/end. Word timings come from detecting the pauses in each line and mapping them
 to its punctuation, so punctuate the script the way it should be spoken.
 
@@ -92,9 +102,10 @@ few frames from the MP4 (`ffmpeg -ss <t> -i final.mp4 -frames:v 1 x.jpg`) and de
 - `episode.js` must return exactly as many shots as `script.json` has lines; the page logs an error otherwise.
 - Changing the script or voice changes all timings: re-run `prep_voice.sh` + `audio.py`, and prefer word anchors over
   hard-coded seconds so the choreography survives that.
-- `at()` matches the start of a word, case-insensitive, punctuation ignored (`at(3, 'arent')` works for "aren't").
+- `at()` matches the start of a word, case-insensitive, punctuation and apostrophes ignored (`at(2, 'havent')` finds "haven't").
+  A missing word throws, and the renderer exits immediately with the message — read it and fix the anchor.
   Use the third argument for the nth occurrence.
 - Poses blend with smoothstep between keyframes; a "snap" (jolt, flinch) is just two keyframes ~0.15–0.2 s apart.
 - When the character turns (`ry`), the face turns with the head — for walks use `ry: ±1.2` (three-quarter) so the face stays readable.
 - Captions use the system font Inter (weight 800); if it's missing the browser falls back to a generic sans.
-- Design your own characters/outfits (`export const character = {...}`); don't recreate another channel's mascot.
+- Keep Beanie in the Classic look (`export const character = {}`); for other series design your own outfit — don't recreate another channel's mascot.

@@ -1,7 +1,8 @@
 # cartoon-short-skill
 
-A Claude skill that turns a topic into a finished vertical (1080×1920) animated Short: toon-shaded 3D world,
-an expressive cartoon character, narrator voice, procedural music and SFX, and word-by-word captions. It's all
+A Claude skill that makes **Beanie Explains**: it turns a topic into a finished vertical (1080×1920) animated Short starring
+**Beanie** (yellow beanie, blue hoodie). You get a toon-shaded 3D world,
+Beanie with a fully expressive face, a narrator voice, procedural music and SFX, and word-by-word captions. It's all
 rendered in code with **Three.js + headless Chromium + ffmpeg**: no Remotion and no AI video generation.
 
 <p align="center"><img src="docs/images/preview.gif" width="270" alt="Animated preview: the character nods off and jolts awake, then a tree opens its eyes"></p>
@@ -10,9 +11,16 @@ Example output: *"What if you stopped sleeping?"* (27 s). The full episode is in
 
 ![Frames from the example episode](docs/images/episode.jpg)
 
+Second example: *"What if you drank only coffee for a week?"* (41 s, `cartoon-shorts/examples/coffee-week/`). It shows off
+props: a mug that follows the hand and a cup pyramid that builds as the narration says "twelve cups a day".
+
+<p align="center"><img src="docs/images/preview-coffee.gif" width="270" alt="Animated preview: the character sips frantically as a pyramid of coffee cups builds up beside him"></p>
+
+![Frames from the coffee episode](docs/images/episode-coffee.jpg)
+
 ## What you can make it do
 
-**17 built-in poses.** Blend between them with keyframes, or override any joint:
+**19 built-in poses.** Blend between them with keyframes, or override any joint:
 
 ![Poses](docs/images/poses.jpg)
 
@@ -20,7 +28,7 @@ Example output: *"What if you stopped sleeping?"* (27 s). The full episode is in
 
 ![Expressions](docs/images/faces.jpg)
 
-**Outfits.** Give each series its own character with one line of colours (presets in `docs/images/outfits.json`):
+**Outfits.** Beanie is the Classic look. Other presets are for side characters or other series, one line of colours each (presets in `docs/images/outfits.json`):
 
 ![Outfits](docs/images/outfits.jpg)
 
@@ -28,7 +36,7 @@ Example output: *"What if you stopped sleeping?"* (27 s). The full episode is in
 
 ![Lighting](docs/images/environments.jpg)
 
-These sheets are rendered by the engine itself: `python3 docs/gallery/build_gallery.py [final.mp4]`
+These sheets are rendered by the engine itself: `python3 docs/gallery/build_gallery.py [sleep.mp4] [coffee.mp4]`
 regenerates them, and the episode frames and GIF come from the optional MP4.
 
 ## Install
@@ -66,6 +74,7 @@ cartoon-shorts/
   references/episode-api.md    poses, face params, environments, cameras
   references/voices.md         Cartesia + Piper voice setup
   examples/stopped-sleeping/   complete example episode
+  examples/coffee-week/        second example: props (mug, cup pyramid) + SFX cues
   references/*.jpg             pose / expression / outfit / lighting sheets (for Claude to look at)
 docs/
   images/                      README gallery

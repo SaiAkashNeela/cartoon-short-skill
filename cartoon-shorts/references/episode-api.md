@@ -79,6 +79,8 @@ reading this table when you're picking the action for a beat:
 | `scared` | arms up defensively, recoiling, head turned (pair with `fx.tremble`) |
 | `sway` | woozy lean |
 | `sit` | sitting on the ground, leaning back on arms (use a lower camera) |
+| `holdMug` | screen-right hand holding something at chest height (pair with `props.mug`) |
+| `sip` | screen-right hand at the mouth: drinking (pair with `props.mug` + `props.mugTilt ≈ -0.9`) |
 | `fallen` | lying on its back (drive `pose.fall` with `fx.fall` for a gravity fall) |
 
 Raw parameters (radians) for custom poses or overrides — "A" limbs are on screen-left, "B" on screen-right when facing camera:
@@ -158,6 +160,12 @@ Keep one outfit per series so viewers recognise the character from episode to ep
 Props (set in `update`, reset every frame):
 - `props.treeEyes = 0..1` — glowing eyes open in the tree trunk (hallucination/creepy beat). `props.treeLook` = pupil drift.
 - `props.zzz = u0` — floating "Z" sprites start rising from the head at shot time `u0` (sleep payoff).
+- `props.mug = 1` — a mug follows the screen-right hand. `props.mugTilt` tilts it (≈ -0.9 to drink, small positive
+  jerks for a spill). Colour via `character.mug`. To keep the hand on the mug in any pose, override the B arm:
+  `POSE('tired', { bSx: -0.6, bSz: 0.15, bEx: -1.15, bEz: 0.35 })`.
+- `props.cups = 0..24` — a pyramid of takeaway cups beside the character (screen-left, x≈-1.45) builds bottom-up, one
+  cup per unit, popping in as the value passes each integer; the last 3 lie knocked over in front. Animate it with
+  `lerp(a, b, smooth(...))` and add `pop` SFX cues for the fast part. Frame it with a look-at around x≈-0.8.
 
 ## 7. Cameras and the set layout
 

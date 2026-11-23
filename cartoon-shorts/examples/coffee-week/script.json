@@ -1,0 +1,95 @@
+{
+ "title": "What if you drank only coffee for a week?",
+ "voice": {
+  "provider": "cartesia",
+  "voice_id": "23112795-d54e-4560-9568-791a87c30201",
+  "name": "Darius (Engaging Narrator)"
+ },
+ "lines": [
+  {
+   "text": "What if you drank nothing but coffee... for an entire week?",
+   "mood": "bright",
+   "emotion": "curious"
+  },
+  {
+   "text": "Day one. You feel unstoppable. Heart racing, hands buzzing... and honestly? You love it.",
+   "label": "DAY 1",
+   "mood": "bright",
+   "emotion": "excited"
+  },
+  {
+   "text": "Day three. You've barely slept, you haven't eaten, and your hands shake so much you spill half of every cup.",
+   "label": "DAY 3",
+   "mood": "tense",
+   "emotion": "neutral"
+  },
+  {
+   "text": "Day five. With zero food, your body starts burning its own fat... and then its muscle.",
+   "label": "DAY 5",
+   "mood": "tense",
+   "emotion": "mysterious"
+  },
+  {
+   "text": "Day seven. Just to stay hydrated, you're drinking twelve cups a day. That's nearly three times the safe caffeine limit.",
+   "label": "DAY 7",
+   "mood": "eerie",
+   "emotion": "scared"
+  },
+  {
+   "text": "Coffee can keep you awake. It just can't keep you alive.",
+   "mood": "calm",
+   "emotion": "calm"
+  }
+ ],
+ "tail": 2.8,
+ "sfx": [
+  {
+   "type": "thud",
+   "line": 5,
+   "at": "end",
+   "offset": 0.75
+  },
+  {
+   "type": "pop",
+   "line": 4,
+   "at": "start",
+   "offset": 3.7
+  },
+  {
+   "type": "pop",
+   "line": 4,
+   "at": "start",
+   "offset": 3.9
+  },
+  {
+   "type": "pop",
+   "line": 4,
+   "at": "start",
+   "offset": 4.1
+  },
+  {
+   "type": "pop",
+   "line": 4,
+   "at": "start",
+   "offset": 4.3
+  },
+  {
+   "type": "pop",
+   "line": 4,
+   "at": "start",
+   "offset": 4.5
+  },
+  {
+   "type": "pop",
+   "line": 4,
+   "at": "start",
+   "offset": 4.7
+  },
+  {
+   "type": "pop",
+   "line": 4,
+   "at": "start",
+   "offset": 4.9
+  }
+ ]
+}

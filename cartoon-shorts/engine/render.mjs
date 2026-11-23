@@ -27,7 +27,7 @@ const [mode, ...args] = process.argv.slice(2);
 const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}), args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
 page.on('console', (m) => { if (m.type() === 'error') console.error('PAGE:', m.text()); });
-page.on('pageerror', (e) => console.error('PAGEERR:', e.message));
+page.on('pageerror', (e) => { console.error('PAGEERR:', e.message); process.exit(1); });  // fail fast instead of waiting for READY
 await page.goto(`http://localhost:${port}/scene.html`);
 await page.waitForFunction(() => window.READY === true, null, { timeout: 120000 });
 const stage = await page.$('#stage');

@@ -26,7 +26,7 @@ export default function ({ POSE, fx }) {
   return { blinks: [], punch: false, shots: DATA.map((s) => ({
     env: s.env, pose: [[0, POSE(s.pose, s.over || {})]], face: [[0, s.face || {}]],
     cam: () => ({ p: s.p, l: s.l }),
-    update: s.fx ? ({ t, pose }) => fx[s.fx](pose, t) : undefined
+    update: ({ t, pose, props }) => { if (s.fx) fx[s.fx](pose, t); if (s.mug) { props.mug = 1; props.mugTilt = s.pose === 'sip' ? -0.9 : 0; } }
   })) };
 }
 """
@@ -92,15 +92,17 @@ POSES = [
     ('sit', {}, {'eyeOpen': .6, 'smile': .3}, None, dict(p=[0.8, 1.6, 6.2], l=[-0.1, 1.05, 0.9])),
     ('fallen', {}, {'eyeOpen': 0, 'smile': .5, 'mouthW': .6, 'blush': .8}, None, dict(p=[0.1, 6.6, 3.2], l=[-0.1, 0.35, -0.4])),
     ('walk', {'ry': 1.2}, {'smile': .4}, 'walk', None),
+    ('holdMug', {}, {'smile': .5}, None, None),
+    ('sip', {}, {'eyeOpen': .05, 'smile': .5, 'blush': .5}, None, None),
 ]
 shots = []
 for name, over, face, fxn, cam in POSES:
-    s = dict(MED, pose='idle' if name == 'walk' else name, over=over, face=face, fx=fxn)
+    s = dict(MED, pose='idle' if name == 'walk' else name, over=over, face=face, fx=fxn, mug=name in ('holdMug', 'sip'))
     if cam: s.update(cam)
     shots.append(s)
 ims = render(shots)
 codes = [f"POSE('{n}')" if n != 'walk' else "fx.walk + ry: 1.2" for n, *_ in POSES]
-codes[8] = "POSE('wave') + fx.wave"; codes[12] = "POSE('scared') + fx.tremble"; codes[15] = "POSE('fallen') / fx.fall"
+codes[8] = "POSE('wave') + fx.wave"; codes[12] = "POSE('scared') + fx.tremble"; codes[15] = "POSE('fallen') / fx.fall"; codes[17] = "POSE('holdMug') + props.mug"; codes[18] = "POSE('sip') + props.mugTilt"
 sheet('poses.jpg', 'Poses', 'Built-in body poses — use POSE(name, overrides) in episode.js keyframes',
       [(im, n, c) for im, (n, *_), c in zip(ims, POSES, codes)], cols=6, crop=(0, 160, 1080, 1760))
 
@@ -126,7 +128,7 @@ sheet('faces.jpg', 'Expressions', 'Face keyframes — any mix of eyeOpen, wide, 
 
 # ---- outfits: one render per character look ----
 OUTFITS = [
-    ('Classic', {}, 'hips', {'eyeOpen': .55, 'brow': .45, 'smile': 1, 'blush': .6}),
+    ('Beanie (Classic)', {}, 'hips', {'eyeOpen': .55, 'brow': .45, 'smile': 1, 'blush': .6}),
     ('Ember', {'hoodie': '#d9412b', 'hoodieDark': '#a92f1f', 'beanie': '#2f2f36', 'beanieBand': '#1f1f25', 'sole': '#2f2f36'}, 'cheer', {'eyeOpen': .05, 'open': .7, 'smile': 1}),
     ('Midnight', {'hoodie': '#26252e', 'hoodieDark': '#18171e', 'beanie': '#e2493b', 'beanieBand': '#b8352a'}, 'think', {'browA': -24, 'brow': .2, 'smile': .1, 'mouthW': .7}),
     ('Bubblegum', {'hoodie': '#f28cb8', 'hoodieDark': '#d66a99', 'beanie': '#ffffff', 'beanieBand': '#e9e9ef', 'sole': '#f28cb8'}, 'wave', {'smile': .9, 'blush': .7}),
@@ -151,21 +153,30 @@ sheet('environments.jpg', 'Lighting', "Per-shot env: '<name>' — switching env 
       [(im, e, f"env: '{e}'") for im, e in zip(ims, ENVS)], cols=6, crop=(0, 0, 1080, 1920), tile_w=240)
 
 # ---- frames from a finished episode (optional): build_gallery.py <final.mp4> ----
-if len(sys.argv) > 1:
-    mp4 = sys.argv[1]
-    BEATS = [(1.6, 'Hook', 'think + curious'), (5.4, 'Day 1', 'hips + smug'), (10.9, 'Day 3', 'nod (microsleep)'),
-             (11.4, 'Day 3', 'jolt awake'), (16.9, 'Day 5', 'tree eyes + scared'), (26.5, 'Night', 'fallen + zzz')]
+def episode_sheet(mp4, name, title, beats, gif=None, gif_span=None):
     tiles = []
-    for t, name, what in BEATS:
-        f = os.path.join(WORK, f'ep_{t}.jpg')
+    for t, label, what in beats:
+        f = os.path.join(WORK, f'ep_{name}_{t}.jpg')
         subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-ss', str(t), '-i', mp4, '-frames:v', '1', f], check=True)
-        tiles.append((Image.open(f).convert('RGB'), name, what))
-    sheet('episode.jpg', 'Example: "What if you stopped sleeping?"', 'Frames from the finished 27 s example episode (examples/stopped-sleeping)',
-          tiles, cols=6, tile_w=240)
-    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-ss', '8.0', '-t', '10.5', '-i', mp4, '-vf',
-                    'fps=10,scale=270:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=96[p];[b][p]paletteuse=dither=bayer:bayer_scale=4',
-                    os.path.join(OUT, 'preview.gif')], check=True)
-    print('wrote episode.jpg, preview.gif')
+        tiles.append((Image.open(f).convert('RGB'), label, what))
+    sheet(name, title, f'Frames from the finished example episode ({os.path.basename(mp4)})', tiles, cols=6, tile_w=240)
+    if gif:
+        subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-ss', str(gif_span[0]), '-t', str(gif_span[1]), '-i', mp4, '-vf',
+                        'fps=10,scale=270:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=96[p];[b][p]paletteuse=dither=bayer:bayer_scale=4',
+                        os.path.join(OUT, gif)], check=True)
+
+
+# ---- frames from finished episodes (optional): build_gallery.py <sleep.mp4> [<coffee.mp4>] ----
+if len(sys.argv) > 1:
+    episode_sheet(sys.argv[1], 'episode.jpg', 'Example: "What if you stopped sleeping?"',
+                  [(1.6, 'Hook', 'think + curious'), (5.4, 'Day 1', 'hips + smug'), (10.9, 'Day 3', 'nod (microsleep)'),
+                   (11.4, 'Day 3', 'jolt awake'), (16.9, 'Day 5', 'tree eyes + scared'), (26.5, 'Night', 'fallen + zzz')],
+                  gif='preview.gif', gif_span=(8.0, 10.5))
+if len(sys.argv) > 2:
+    episode_sheet(sys.argv[2], 'episode-coffee.jpg', 'Example: "What if you drank only coffee for a week?"',
+                  [(1.6, 'Hook', 'sip + props.mug'), (8.6, 'Day 1', 'wired + tremble'), (18.4, 'Day 3', 'spill lurch'),
+                   (23.7, 'Day 5', 'storm + cups'), (31.6, 'Day 7', 'cup pyramid'), (40.5, 'End', 'fallen, wide awake')],
+                  gif='preview-coffee.gif', gif_span=(29.5, 9.0))
 
 # the skill ships the sheets Claude should look at while choreographing
 for f in ('poses.jpg', 'faces.jpg', 'outfits.jpg', 'environments.jpg'):

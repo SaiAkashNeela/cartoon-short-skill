@@ -322,7 +322,7 @@ function limb(parent, x, y, len1, len2, r, mat, end) {
   const lower = new THREE.Group(); lower.position.y = -len1; upper.add(lower);
   const l = mesh(new THREE.CapsuleGeometry(r * 0.92, len2 - r, 4, 10), mat, { outline: 0.014 }); l.position.y = -len2 / 2; lower.add(l);
   const tip = end(); tip.position.y = -len2 - 0.03; lower.add(tip);
-  return { upper, lower };
+  return { upper, lower, tip };
 }
 const hand = () => mesh(new THREE.SphereGeometry(0.105, 16, 12), SKIN, { outline: 0.014 });
 const foot = () => {
@@ -345,6 +345,36 @@ function zSprite() {
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, fog: false, depthTest: false })); s.renderOrder = 10; scene.add(s); return s;
 }
 const zs = [zSprite(), zSprite(), zSprite()];
+
+// coffee props: a mug that follows the screen-right hand (props.mug, props.mugTilt) and a pile of
+// cup pyramid beside the character that builds one cup at a time (props.cups = 0..24, fractional = popping)
+const mug = new THREE.Group(); scene.add(mug);
+{
+  const MUGC = toon(LOOK.mug || '#e2493b');
+  mug.add(mesh(new THREE.CylinderGeometry(0.11, 0.1, 0.24, 24), MUGC, { outline: 0.012 }));
+  const coffee = new THREE.Mesh(new THREE.CircleGeometry(0.088, 24), toon('#4a2a18')); coffee.rotation.x = -Math.PI / 2; coffee.position.y = 0.122; mug.add(coffee);
+  const handle = mesh(new THREE.TorusGeometry(0.07, 0.022, 8, 20), MUGC, { outline: 0.01 }); handle.position.x = 0.125; mug.add(handle);
+}
+const cups = [];
+{
+  // a pyramid of takeaway cups beside the character (rows of 6,5,4,3,2,1 bottom-up), then 3 knocked over in front;
+  // tall enough to read above the grass. props.cups reveals them in that order.
+  const cupGeo = new THREE.CylinderGeometry(0.11, 0.078, 0.31, 16), sleeveGeo = new THREE.CylinderGeometry(0.109, 0.093, 0.12, 16), lidGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.04, 16);
+  const PAPER = toon('#f4f1ea'), SLEEVE = toon('#9a6a3e'), LID = toon('#ffffff');
+  const cup = (x, y, z, tipped, yaw) => {
+    const g = new THREE.Group(), tip = new THREE.Group(); g.add(tip);
+    tip.add(mesh(cupGeo, PAPER, { outline: 0.01 }));
+    const sl = mesh(sleeveGeo, SLEEVE); sl.position.y = -0.01; tip.add(sl);
+    const lid = mesh(lidGeo, LID, { outline: 0.008 }); lid.position.y = 0.17; tip.add(lid);
+    g.position.set(x, y, z); g.rotation.y = yaw; if (tipped) tip.rotation.z = Math.PI / 2;
+    g.visible = false; scene.add(g); cups.push(g);
+  };
+  const CX = -1.45, CZ = 1.35, GAP = 0.25, ROW = 0.35;
+  for (let row = 0; row < 6; row++) for (let i = 0; i < 6 - row; i++)
+    cup(CX + (i - (5 - row) / 2) * GAP, 0.17 + row * ROW, CZ, false, (row * 7 + i) * 0.9);
+  cup(0.85, 0.11, 1.55, true, 0.6); cup(-0.85, 0.11, 2.0, true, 2.2); cup(1.15, 0.11, 1.0, true, 4.0);
+}
+const Y_AXIS = new THREE.Vector3(0, 1, 0), mugOff = new THREE.Vector3();
 
 // ---------- face drawing ----------
 const FACE0 = { brow: 0, browY: 0, browA: 0, eyeOpen: 1, wide: 0, lookX: 0, lookY: 0, smile: 0.2, open: 0, mouthW: 1, bags: 0, sweat: 0, blush: 0, sleepy: 0 };
@@ -453,6 +483,8 @@ const P = {
   shrug: { aSx: -0.35, aSz: 0.55, aEx: -1.35, aEz: -0.6, bSx: -0.35, bSz: 0.55, bEx: -1.35, bEz: -0.6, hz: 0.18, side: 0.04, hipY: 0.02 },
   facepalm: { bSx: -1.4, bSz: 0.05, bEx: -2.45, bEz: 0.45, aSz: 0.1, hx: 0.38, lean: 0.12 },
   wave: { bSx: -0.25, bSz: 2.1, bEx: -0.6, bEz: -0.3, aSz: 0.12, hz: -0.1 },
+  sip: { bSx: -1.3, bSz: 0.05, bEx: -2.0, bEz: 0.75, aSz: 0.12, aEx: -0.15, hx: -0.12 },
+  holdMug: { bSx: -0.6, bSz: 0.15, bEx: -1.15, bEz: 0.35, aSz: 0.12, aEx: -0.15 },
   sit: { lHx: -1.45, lK: 0.25, rHx: -1.4, rK: 0.35, hipY: -0.8, aSx: 0.55, aSz: 0.35, aEx: 0, bSx: 0.55, bSz: 0.35, bEx: 0, lean: -0.15, hx: -0.05 }
 };
 const POSE = (name, extra = {}) => {
@@ -463,7 +495,8 @@ const POSE = (name, extra = {}) => {
 // ---------- context handed to episode.js ----------
 const D = CUT.map((c, i) => (CUT[i + 1] ?? TL.duration) - c);  // shot durations
 function findWord(line, word, nth = 0) {
-  const ws = TL.words.filter((w) => w.line === line && w.w.toLowerCase().replace(/[^a-z0-9']/g, '').startsWith(word.toLowerCase()));
+  const norm = (x) => x.toLowerCase().replace(/[^a-z0-9]/g, '');  // "haven't" matches 'havent'
+  const ws = TL.words.filter((w) => w.line === line && norm(w.w).startsWith(norm(word)));
   if (!ws[nth]) throw new Error(`word "${word}" not found in line ${line}: "${TL.lines[line]}"`);
   return ws[nth];
 }
@@ -571,7 +604,7 @@ window.setTime = function (t) {
   const face = keyed(shot.face, u, FACE0);
   pose.hipY += Math.sin(t * 2.4) * 0.012;  // breathing
   pose.hx += Math.sin(t * 1.7) * 0.02;
-  const props = { treeEyes: 0, treeLook: Math.sin(u * 0.8), zzz: -1 };
+  const props = { treeEyes: 0, treeLook: Math.sin(u * 0.8), zzz: -1, mug: 0, mugTilt: 0, cups: 0 };
   if (shot.update) shot.update({ u, t, pose, face, props });
   applyPose(pose);
 
@@ -579,6 +612,13 @@ window.setTime = function (t) {
   drawFace(face);
 
   // props
+  mug.visible = props.mug > 0.5;
+  if (mug.visible) {
+    CH.armB.tip.getWorldPosition(tmpV);
+    mugOff.set(0, 0.05, 0.13).applyAxisAngle(Y_AXIS, char.rotation.y);
+    mug.position.copy(tmpV).add(mugOff); mug.rotation.set(props.mugTilt, char.rotation.y, 0);
+  }
+  cups.forEach((c, i) => { const k = clamp(props.cups - i); c.visible = k > 0.001; c.scale.setScalar(k < 1 ? Math.max(0.01, easeOutBack(k)) : 1); });
   treeEyes.visible = props.treeEyes > 0.001;
   if (treeEyes.visible) eyeParts.forEach(({ white, pup }) => { white.scale.y = 0.6 * props.treeEyes + 0.001; pup.scale.y = 1.8 * props.treeEyes + 0.001; pup.position.x = 0.08 * props.treeLook; });
   zs.forEach((z, i) => {

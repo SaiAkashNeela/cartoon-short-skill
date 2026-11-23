@@ -4,7 +4,32 @@ A Claude skill that turns a topic into a finished vertical (1080×1920) animated
 an expressive cartoon character, narrator voice, procedural music and SFX, and word-by-word captions. It's all
 rendered in code with **Three.js + headless Chromium + ffmpeg**: no Remotion and no AI video generation.
 
+<p align="center"><img src="docs/images/preview.gif" width="270" alt="Animated preview: the character nods off and jolts awake, then a tree opens its eyes"></p>
+
 Example output: *"What if you stopped sleeping?"* (27 s). The full episode is in `cartoon-shorts/examples/stopped-sleeping/`.
+
+![Frames from the example episode](docs/images/episode.jpg)
+
+## What you can make it do
+
+**17 built-in poses.** Blend between them with keyframes, or override any joint:
+
+![Poses](docs/images/poses.jpg)
+
+**Expressions.** The face is redrawn every frame from a few numbers, so it can morph smoothly between any of these:
+
+![Expressions](docs/images/faces.jpg)
+
+**Outfits.** Give each series its own character with one line of colours (presets in `docs/images/outfits.json`):
+
+![Outfits](docs/images/outfits.jpg)
+
+**Lighting per shot.** Switching the look between shots shows time passing:
+
+![Lighting](docs/images/environments.jpg)
+
+These sheets are rendered by the engine itself: `python3 docs/gallery/build_gallery.py [final.mp4]`
+regenerates them, and the episode frames and GIF come from the optional MP4.
 
 ## Install
 
@@ -41,4 +66,8 @@ cartoon-shorts/
   references/episode-api.md    poses, face params, environments, cameras
   references/voices.md         Cartesia + Piper voice setup
   examples/stopped-sleeping/   complete example episode
+  references/*.jpg             pose / expression / outfit / lighting sheets (for Claude to look at)
+docs/
+  images/                      README gallery
+  gallery/build_gallery.py     regenerates the gallery from the engine
 ```

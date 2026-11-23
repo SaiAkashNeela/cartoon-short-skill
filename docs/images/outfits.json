@@ -1,0 +1,49 @@
+{
+ "Classic": {},
+ "Ember": {
+  "hoodie": "#d9412b",
+  "hoodieDark": "#a92f1f",
+  "beanie": "#2f2f36",
+  "beanieBand": "#1f1f25",
+  "sole": "#2f2f36"
+ },
+ "Midnight": {
+  "hoodie": "#26252e",
+  "hoodieDark": "#18171e",
+  "beanie": "#e2493b",
+  "beanieBand": "#b8352a"
+ },
+ "Bubblegum": {
+  "hoodie": "#f28cb8",
+  "hoodieDark": "#d66a99",
+  "beanie": "#ffffff",
+  "beanieBand": "#e9e9ef",
+  "sole": "#f28cb8"
+ },
+ "Forest": {
+  "hoodie": "#3f8f4f",
+  "hoodieDark": "#2f6f3c",
+  "beanie": "#8a5a34",
+  "beanieBand": "#6d4426"
+ },
+ "Royal": {
+  "hoodie": "#6b45c6",
+  "hoodieDark": "#5233a0",
+  "beanie": "#33c4b0",
+  "beanieBand": "#26a090",
+  "sole": "#33c4b0"
+ },
+ "Sunset": {
+  "hoodie": "#f08a24",
+  "hoodieDark": "#c96c12",
+  "beanie": "#3b78db",
+  "beanieBand": "#2d5fb3"
+ },
+ "Frost": {
+  "hoodie": "#e9eef5",
+  "hoodieDark": "#c9d3e0",
+  "beanie": "#4fb6e8",
+  "beanieBand": "#3594c2",
+  "sole": "#4fb6e8"
+ }
+}

@@ -21,7 +21,7 @@ export default function episode({ TL, S, E, CUT, D, at, wt, dolly, POSE, fx, smo
 2. Shot fields
 3. Poses
 4. Face parameters
-5. Environments (lighting)
+5. Environments (lighting), 5b. Outfits
 6. Effects (`fx`) and props
 7. Cameras and the set layout
 8. Extending the engine
@@ -59,7 +59,8 @@ needs what differs from neutral. Hold a pose by repeating it at a later time. A 
 
 ## 3. Poses
 
-Library (`POSE(name)`), all verified on camera:
+Library (`POSE(name)`). **Look at `references/poses.jpg`** to see every pose rendered, which is quicker than
+reading this table when you're picking the action for a beat:
 
 | name | reads as |
 |---|---|
@@ -98,6 +99,8 @@ Raw parameters (radians) for custom poses or overrides — "A" limbs are on scre
 
 ## 4. Face parameters
 
+`references/faces.jpg` shows 12 ready-made expressions with their parameters.
+
 | param | range | effect |
 |---|---|---|
 | `eyeOpen` | 0–1 | <0.12 draws closed "sleep" arcs; 0.4–0.6 = heavy-lidded (tired, smug) |
@@ -118,8 +121,26 @@ curious `{browA:-24, brow:.1, smile:.1, mouthW:.7}` · asleep `{eyeOpen:0, smile
 
 ## 5. Environments
 
+`references/environments.jpg` shows all six.
+
 `env` per shot: `day`, `morning` (warm, bright), `golden` (late afternoon), `dusk` (purple/pink, a few stars),
 `night` (dark blue, stars, moon), `storm` (grey, flat). Changing env between shots is the cheapest way to show time passing.
+
+## 5b. Outfits
+
+`references/outfits.jpg` shows these presets; paste one as `export const character = {...}`:
+
+```js
+Classic   {}                                                                                   // blue hoodie, yellow beanie
+Ember     { hoodie: '#d9412b', hoodieDark: '#a92f1f', beanie: '#2f2f36', beanieBand: '#1f1f25', sole: '#2f2f36' }
+Midnight  { hoodie: '#26252e', hoodieDark: '#18171e', beanie: '#e2493b', beanieBand: '#b8352a' }
+Bubblegum { hoodie: '#f28cb8', hoodieDark: '#d66a99', beanie: '#ffffff', beanieBand: '#e9e9ef', sole: '#f28cb8' }
+Forest    { hoodie: '#3f8f4f', hoodieDark: '#2f6f3c', beanie: '#8a5a34', beanieBand: '#6d4426' }
+Royal     { hoodie: '#6b45c6', hoodieDark: '#5233a0', beanie: '#33c4b0', beanieBand: '#26a090', sole: '#33c4b0' }
+Sunset    { hoodie: '#f08a24', hoodieDark: '#c96c12', beanie: '#3b78db', beanieBand: '#2d5fb3' }
+Frost     { hoodie: '#e9eef5', hoodieDark: '#c9d3e0', beanie: '#4fb6e8', beanieBand: '#3594c2', sole: '#4fb6e8' }
+```
+Keep one outfit per series so viewers recognise the character from episode to episode.
 
 ## 6. Effects and props
 

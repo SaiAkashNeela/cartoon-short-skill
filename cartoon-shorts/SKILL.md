@@ -16,6 +16,7 @@ The skill lives in this folder:
 - `examples/stopped-sleeping/` — a complete working episode (`script.json` + `episode.js`) to copy from
 - `references/episode-api.md` — **read before writing `episode.js`**: poses, face params, envs, props, cameras
 - `references/voices.md` — Cartesia voice details and the free Piper fallback
+- `references/poses.jpg`, `faces.jpg`, `outfits.jpg`, `environments.jpg` — rendered sheets of every pose, expression, outfit preset and lighting look; view them when choreographing
 
 ## The model: one shot per narrated line
 

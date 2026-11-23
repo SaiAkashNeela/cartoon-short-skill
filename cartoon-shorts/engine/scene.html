@@ -33,6 +33,16 @@
     justify-content: center; padding-bottom: 140px; font-family: 'Inter', sans-serif;
     background: radial-gradient(ellipse at 50% 45%, rgba(12,10,24,0.82) 0%, rgba(12,10,24,0.95) 70%); }
   #end canvas { width: 320px; height: 320px; }
+  /* infographic overlays: pop-up fact (props.fact) and labels pinned to 3D points (props.labels / props.measure) */
+  #fact { position: absolute; left: 0; right: 0; top: 330px; text-align: center; opacity: 0; font-family: 'Inter', sans-serif; font-weight: 800; transform-origin: 50% 40%; }
+  #fact .big { display: block; font-size: 150px; line-height: 1.0; color: #ffd93b; paint-order: stroke fill; -webkit-text-stroke: 22px #0d0d10; text-shadow: 0 10px 0 #0d0d10; }
+  #fact .sub { display: inline-block; margin-top: 14px; font-size: 52px; color: #fff; paint-order: stroke fill; -webkit-text-stroke: 10px #0d0d10; }
+  #labels .lbl { position: absolute; transform: translate(-50%, -100%); text-align: center; font-family: 'Inter', sans-serif; font-weight: 800;
+    font-size: 40px; color: #fff; white-space: nowrap; paint-order: stroke fill; -webkit-text-stroke: 8px #0d0d10; }
+  #labels .lbl i { display: block; font-style: normal; font-size: 34px; line-height: 1; color: #ffd93b; }
+  #stage.video #fact { top: 150px; }
+  #stage.video #fact .big { font-size: 136px; }
+  #stage.video #fact .sub { font-size: 48px; }
   /* landscape long-form videos (script.json "format": "video", 1920x1080) */
   #stage.video #cap { top: 790px; left: 240px; right: 240px; font-size: 82px; }
   #stage.video #cap span { -webkit-text-stroke: 17px #0d0d10; }
@@ -55,6 +65,8 @@
 <div id="stage">
   <div id="vignette"></div>
   <div id="day"></div>
+  <div id="labels"></div>
+  <div id="fact"><span class="big"></span><span class="sub"></span></div>
   <div id="spk"><b></b></div>
   <div id="cap"></div>
   <div id="wm"></div>
@@ -324,7 +336,7 @@ const fieldSet = new THREE.Group(); scene.add(fieldSet);
 scene.children.filter((c) => !fieldStart.has(c) && c !== fieldSet).forEach((c) => fieldSet.add(c));
 
 // ---------- other sets (engine/sets.js): bedroom, kitchen, office, hospital, street, space, beach ----------
-const { sets: SETS, moons: WINDOW_MOONS } = buildSets({ THREE, mesh, toon, skyU });
+const { sets: SETS, moons: WINDOW_MOONS, COSMOS } = buildSets({ THREE, mesh, toon, skyU });
 SETS.field = { group: fieldSet, outdoor: true };
 for (const k in SETS) scene.add(SETS[k].group);
 
@@ -424,6 +436,21 @@ function makeCharacter(look = {}) {
 const LOOK = Object.assign({}, BASE_LOOK, EP.character || {});
 const HERO = makeCharacter(LOOK);
 const CAST = { hero: HERO };
+// space helmet for the hero (props.helmet)
+const helmet = new THREE.Group(); HERO.head.add(helmet); helmet.visible = false;
+{ const glass = new THREE.Mesh(new THREE.SphereGeometry(0.86, 40, 28), new THREE.MeshToonMaterial({ color: '#d6ecff', transparent: true, opacity: 0.2, depthWrite: false, gradientMap: RAMP }));
+  glass.renderOrder = 5; helmet.add(glass);
+  const rim = new THREE.Mesh(new THREE.SphereGeometry(0.875, 40, 28), olMat(0.0)); rim.material = new THREE.MeshBasicMaterial({ color: 0x141218, side: THREE.BackSide }); helmet.add(rim);
+  const shine = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.035, 8, 24, 1.1), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75 })); shine.position.set(-0.05, 0.12, 0.6); shine.rotation.set(-0.3, 0.25, 1.9); helmet.add(shine);
+  const collar = mesh(new THREE.TorusGeometry(0.5, 0.11, 10, 28), toon('#e9edf2'), { outline: 0.015 }); collar.rotation.x = Math.PI / 2; collar.position.y = -0.62; helmet.add(collar); }
+// infographic helpers shared by every set: a dashed measuring line and a travelling light pulse
+const glowCanvas = document.createElement('canvas'); glowCanvas.width = glowCanvas.height = 128;
+{ const c = glowCanvas.getContext('2d'), gr = c.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.3, 'rgba(255,255,255,0.6)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = gr; c.fillRect(0, 0, 128, 128); }
+const pulse = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(glowCanvas), color: 0xfff6c8, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+pulse.visible = false; pulse.renderOrder = 8; scene.add(pulse);
+const measureLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(1, 0, 0)]),
+  new THREE.LineDashedMaterial({ color: 0xffd93b, dashSize: 1, gapSize: 0.6, transparent: true, depthTest: false, fog: false }));
+measureLine.visible = false; measureLine.renderOrder = 9; scene.add(measureLine);
 for (const [name, look] of Object.entries(EP.cast || {})) { if (name === 'hero') throw new Error('"hero" is reserved for the main character'); CAST[name] = makeCharacter(look); CAST[name].root.visible = false; }
 
 // sleeping Z sprites
@@ -565,7 +592,7 @@ function keyed(keys, u, base) {
 // x/z = character position on the ground, ry = facing (0 = toward +z camera side). fall: 0 standing .. 1 lying on back.
 const POSE0 = { hipY: 0, lean: 0, side: 0, twist: 0, hx: 0, hy: 0, hz: 0,
   aSx: 0, aSz: 0.12, aEx: -0.12, aEz: 0, bSx: 0, bSz: 0.12, bEx: -0.12, bEz: 0,
-  lHx: 0, lK: 0, rHx: 0, rK: 0, fall: 0, x: -0.1, z: 0.9, ry: 0 };
+  lHx: 0, lK: 0, rHx: 0, rK: 0, fall: 0, x: -0.1, z: 0.9, ry: 0, y: 0 };
 
 const P = {
   idle: {},
@@ -619,7 +646,8 @@ const fx = {
   },
   wave(pose, t, k = 1) { pose.bEz += Math.sin(t * 9) * 0.45 * k; },
   shake(pose, t, k = 1) { pose.hy += Math.sin(t * 14) * 0.35 * k; },   // "no" head shake
-  nodYes(pose, t, k = 1) { pose.hx += Math.sin(t * 11) * 0.2 * k; }
+  nodYes(pose, t, k = 1) { pose.hx += Math.sin(t * 11) * 0.2 * k; },
+  float(pose, t, k = 1) { pose.y += Math.sin(t * 1.3) * 0.25 * k; pose.side += Math.sin(t * 0.7) * 0.08 * k; pose.lK += 0.25 * k; pose.rK += 0.35 * k; pose.aSz += 0.25 * k; pose.bSz += 0.25 * k; }   // drifting in zero-g
 };
 // stage marks that stay clear of every set's furniture (x, z); side marks are in front of beds/desks
 // (a portrait frame is narrow: left/right fit a two-shot from z≈11; far* need a group shot from z≈14)
@@ -628,7 +656,7 @@ const MARK = { center: [-0.1, 0.9], left: [-1.15, 1.5], right: [1.05, 1.5], farL
 // ry that turns a character at `from` toward `to`; `cheat` < 1 keeps faces readable by only half-turning (cartoon
 // "cheat to camera"); pass 1 for a true profile
 const facing = (from, to, cheat = 0.5) => Math.atan2(to[0] - from[0], to[1] - from[1]) * cheat;
-const ctx = { THREE, TL, S, E, CUT, D, wt, at, dolly, POSE, P, fx, smooth, lerp, clamp, easeOutBack, MARK, facing, FORMAT, W, H };
+const ctx = { THREE, TL, S, E, CUT, D, wt, at, dolly, POSE, P, fx, smooth, lerp, clamp, easeOutBack, MARK, facing, FORMAT, W, H, COSMOS };
 const EPI = EP.default(ctx);
 const SHOTS = EPI.shots;
 if (SHOTS.length !== S.length) console.error(`episode has ${SHOTS.length} shots but the script has ${S.length} lines — need exactly one shot per line`);
@@ -724,10 +752,45 @@ function updateBranding(t) {
   endEl.querySelector('.cta').style.transform = `scale(${Math.max(0.01, pop(0.55)) * (1 + 0.04 * Math.sin(u * 8) * clamp(u - 1))})`;
 }
 
+// ---------- infographics: props.fact, props.labels, props.measure, props.pulse ----------
+const factEl = document.getElementById('fact'), labelsEl = document.getElementById('labels'), projV = new THREE.Vector3();
+const toScreen = (p) => { projV.set(...p).project(camera); return projV.z > 1 || projV.z < -1 ? null : [(projV.x + 1) / 2 * W, (1 - projV.y) / 2 * H]; };
+function applyInfographics(props) {
+  // a big pop-up number/fact: { text, sub, since } (since = seconds since it appeared, drives the pop)
+  const f = props.fact;
+  if (f) {
+    factEl.querySelector('.big').textContent = f.text; factEl.querySelector('.sub').textContent = f.sub || '';
+    factEl.querySelector('.sub').style.display = f.sub ? 'inline-block' : 'none';
+    const k = clamp((f.since ?? 1) / 0.35); factEl.style.opacity = clamp(k * 3) * (f.fade ?? 1);
+    factEl.style.transform = `scale(${0.4 + 0.6 * easeOutBack(k)})`;
+  } else factEl.style.opacity = 0;
+  // labels pinned to 3D points: [{ pos: [x,y,z], text, sub }]; measure also gets a label at its midpoint
+  const labels = [...(props.labels || [])];
+  const m = props.measure;
+  measureLine.visible = !!m;
+  if (m) {
+    const k = clamp(m.k ?? 1), a = new THREE.Vector3(...m.from), b = new THREE.Vector3(...m.to), end = a.clone().lerp(b, k);
+    measureLine.geometry.setFromPoints([a, end]); measureLine.computeLineDistances();
+    const len = a.distanceTo(b); measureLine.material.dashSize = len / 45; measureLine.material.gapSize = len / 70;
+    if (m.text && k > 0.6) labels.push({ pos: a.clone().lerp(b, 0.5).toArray(), text: m.text, sub: m.sub, noArrow: true });
+  }
+  while (labelsEl.children.length < labels.length) { const d = document.createElement('div'); d.className = 'lbl'; labelsEl.appendChild(d); }
+  [...labelsEl.children].forEach((d, i) => {
+    const l = labels[i], sp = l && toScreen(l.pos);
+    if (!sp) { d.style.display = 'none'; return; }
+    d.style.display = 'block'; d.style.left = sp[0] + 'px'; d.style.top = (sp[1] - (l.lift ?? 0)) + 'px';
+    d.innerHTML = `${l.text.replace(/[<>&]/g, '')}${l.sub ? `<i>${l.sub.replace(/[<>&]/g, '')}</i>` : ''}${l.noArrow ? '' : '<i>▼</i>'}`;
+  });
+  // a glowing pulse travelling from -> to: { from, to, k, size, color }
+  const pl = props.pulse;
+  pulse.visible = !!pl;
+  if (pl) { pulse.position.set(...pl.from).lerp(new THREE.Vector3(...pl.to), clamp(pl.k)); const sz = pl.size || 2; pulse.scale.set(sz, sz, 1); pulse.material.color.set(pl.color || 0xfff6c8); }
+}
+
 // ---------- per-frame ----------
 const tmpV = new THREE.Vector3();
 function applyPose(C, p) {
-  C.root.position.set(p.x, 0, p.z); C.root.rotation.y = p.ry;
+  C.root.position.set(p.x, p.y || 0, p.z); C.root.rotation.y = p.ry;
   C.hips.position.y = 1.0 + p.hipY; C.hips.rotation.y = p.twist * 0.5;
   C.torso.rotation.set(p.lean, p.twist * 0.5, p.side);
   C.head.rotation.set(p.hx, p.hy, p.hz);
@@ -768,15 +831,15 @@ window.setTime = function (t) {
   sun.castShadow = !SET.studio;
   clouds.forEach((c) => { c.visible = SET.outdoor && e.clouds !== false; });
   WINDOW_MOONS.forEach((m) => { m.material.opacity = e.moon; });
-  if (SET.update) SET.update(t, e, clamp(ENVS[shot.env].stars));
   vigEl.style.opacity = SET.studio ? 0 : 0.6 + (e.stars ? 0.4 : 0);
   windU.value = t;
   clouds.forEach((c) => { c.position.x = c.userData.base.x + t * c.userData.speed; });
 
-  const props = { treeEyes: 0, treeLook: Math.sin(u * 0.8), zzz: -1, mug: 0, mugTilt: 0, cups: 0 };
+  const props = { treeEyes: 0, treeLook: Math.sin(u * 0.8), zzz: -1, mug: 0, mugTilt: 0, cups: 0, helmet: 0, fact: null, labels: [], measure: null, pulse: null };
   // hero: the shot's own pose/face/update (leave out `pose` to cut away from the hero)
   HERO.root.visible = !!shot.pose;
   if (shot.pose) animate(HERO, 'hero', shot, u, t, props, POSE0);
+  else if (shot.update) shot.update({ u, t, pose: Object.assign({}, POSE0), face: Object.assign({}, FACE0), props });   // hero off-screen: still run the shot's hook (props)
   // everyone else: shot.cast = { name: { pose, face, update } }; people not listed are off-screen
   for (const name in CAST) {
     if (name === 'hero') continue;
@@ -815,6 +878,15 @@ window.setTime = function (t) {
   sky.position.copy(camera.position); stars.position.copy(camera.position);
   moon.position.set(camera.position.x - 60, camera.position.y + 120, camera.position.z - 260);
   sun.position.set(-0.5 + e.dir[0] * 2, e.dir[1] * 2, e.dir[2] * 2); sun.target.position.set(-0.5, 0, 0);
+
+  // deep-space sets need a far camera and no shadow pass
+  sun.castShadow = !SET.studio && !SET.cosmic;
+  if (SET.cosmic) { camera.near = 0.5; camera.far = 250000; } else { camera.near = 0.1; camera.far = 600; }
+  camera.updateProjectionMatrix();
+  if (SET.update) SET.update(t, e, clamp(ENVS[shot.env].stars), props, camera);
+  helmet.visible = !!props.helmet;
+  camera.updateMatrixWorld();   // labels project with this frame's camera, not the last one
+  applyInfographics(props);
 
   flashEl.style.opacity = punch ? 0.35 * (1 - smooth(0, 0.12, u)) : 0;
   updateCaptions(t);

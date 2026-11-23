@@ -288,6 +288,144 @@ export function buildSets({ THREE, mesh, toon, skyU }) {
     sets.beach = { group: g, outdoor: true, update: (t) => { foam.position.z = -5.2 + Math.sin(t * 0.9) * 0.35; } };
   }
 
+  // ================= cosmos (deep space, for scale-of-the-universe stories) =================
+  // Regions sit far apart along -z; only the regions near the camera are drawn. Positions are exported as COSMOS so
+  // episodes can aim cameras and props at them. Scales are per-region (each region is internally consistent).
+  //   earthMoon  z=0       Earth r=3.2 at (0,0,0), Moon r=0.87 at (203.7,0,0): the real gap at the Moon's farthest,
+  //                        so the 7 planets (props.lineup = 0..7) fit between them to scale
+  //   sun        z=-5000   Sun r=55 beside a tiny Earth r=0.5 (true 109:1 ratio)
+  //   solar      z=-10000  Sun + 8 orbiting planets (orbits not to scale), orbit rings
+  //   voyager    z=-15000  the Voyager probe, the Sun a bright dot far away
+  //   star       z=-20000  a red dwarf (Proxima Centauri)
+  //   galaxy     z=-40000  the Milky Way, ~60k glowing particles, radius 600; COSMOS.youAreHere marks our Sun
+  //   andromeda  near the Milky Way, tilted, a little larger
+  //   web        z=-80000  the cosmic web: galaxies along filaments
+  const COSMOS = {};
+  {
+    const g = new THREE.Group();
+    const regions = [];
+    const region = (name, center, radius) => { const r = new THREE.Group(); r.position.set(...center); g.add(r); regions.push({ r, c: new THREE.Vector3(...center), radius }); COSMOS[name] = center; return r; };
+    const glowTex = tex(128, 128, (c) => { const gr = c.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.25, 'rgba(255,255,255,0.55)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = gr; c.fillRect(0, 0, 128, 128); });
+    const glowSprite = (parent, color, size, pos = [0, 0, 0], opacity = 1) => {
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+      s.scale.set(size, size, 1); s.position.set(...pos); parent.add(s); return s;
+    };
+    const bands = (cols, rx = 1) => tex(256, 128, (c) => { for (let y = 0; y < 128; y += 4) { c.fillStyle = cols[Math.floor((Math.sin(y * 0.21) * 0.5 + 0.5) * cols.length) % cols.length]; c.fillRect(0, y, 256, 4); } }, rx, 1);
+    const planetMat = {
+      mercury: toon('#ffffff', { map: speckle('#9b9590', ['#7f7a76', '#b5afa9'], 400, 2, 1) }),
+      venus: toon('#ffffff', { map: bands(['#e8cf98', '#d9b97a', '#f1dcae']) }),
+      earth: toon('#ffffff', { map: tex(256, 128, (c) => {
+        c.fillStyle = '#2f7fd8'; c.fillRect(0, 0, 256, 128); c.fillStyle = '#4fb04a';
+        for (let i = 0; i < 9; i++) { c.beginPath(); c.ellipse(rnd() * 256, 20 + rnd() * 88, 12 + rnd() * 26, 8 + rnd() * 16, rnd() * 3, 0, PI * 2); c.fill(); }
+        c.fillStyle = '#f4f8ff'; c.fillRect(0, 0, 256, 9); c.fillRect(0, 119, 256, 9);
+        c.fillStyle = 'rgba(255,255,255,0.7)'; for (let i = 0; i < 14; i++) { c.beginPath(); c.ellipse(rnd() * 256, rnd() * 128, 10 + rnd() * 20, 3 + rnd() * 4, 0, 0, PI * 2); c.fill(); }
+      }) }),
+      moon: toon('#ffffff', { map: speckle('#c9c6c0', ['#a9a6a0', '#dcd9d3', '#8f8c86'], 500, 2, 1) }),
+      mars: toon('#ffffff', { map: speckle('#c1502e', ['#a8432a', '#d9734a', '#8f3a24'], 500, 2, 1) }),
+      jupiter: toon('#ffffff', { map: bands(['#d9b38c', '#b07a52', '#efe0c8', '#c99a6b', '#8c5a3a']) }),
+      saturn: toon('#ffffff', { map: bands(['#e6cf9a', '#cfb07a', '#f2e2bc', '#d8bd88']) }),
+      uranus: toon('#9fe3e8'), neptune: toon('#3b6fe0')
+    };
+    const planet = (parent, name, r, pos) => {
+      const m = mesh(new THREE.SphereGeometry(r, 40, 24), planetMat[name], { outline: Math.max(0.02, r * 0.012), cast: false, recv: false }); m.position.set(...pos); parent.add(m);
+      if (name === 'saturn') { const ring = new THREE.Mesh(new THREE.RingGeometry(r * 1.25, r * 2.2, 64), new THREE.MeshToonMaterial({ map: bands(['#d8c294', '#bfa676', '#e9dbb4', 'rgba(0,0,0,0)']), side: THREE.DoubleSide, transparent: true, opacity: 0.9 })); ring.rotation.x = PI / 2 - 0.16; m.add(ring); }
+      if (name === 'earth') glowSprite(m, 0x6fb6ff, r * 3.2, [0, 0, 0], 0.45);
+      return m;
+    };
+    // --- earth & moon, with the planet line-up in between
+    const A = region('earthMoon', [0, 0, 0], 900);
+    const earthA = planet(A, 'earth', 3.2, [0, 0, 0]); planet(A, 'moon', 0.87, [203.7, 0, 0]);
+    COSMOS.moon = [203.7, 0, 0];
+    const lineup = [];
+    { let x = 3.2 + 1.0; for (const [n, r] of [['mercury', 1.225], ['venus', 3.04], ['mars', 1.7], ['jupiter', 35.1], ['saturn', 29.25], ['uranus', 12.74], ['neptune', 12.37]]) {
+        x += r; const p = planet(A, n, r, [x, 0, 0]); p.visible = false; lineup.push(p); x += r + 0.9; } }   // ends ~8 units short of the Moon, as in reality
+    // --- sun vs earth
+    const B = region('sun', [0, 0, -5000], 2500);
+    const sunMat = new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false, map: speckle('#ffb43a', ['#ffd66b', '#ff9a2a', '#ffe9a0'], 1400, 3, 2) });
+    const sunB = new THREE.Mesh(new THREE.SphereGeometry(55, 64, 40), sunMat); B.add(sunB);
+    glowSprite(B, 0xffc46b, 190, [0, 0, 0], 0.9); glowSprite(B, 0xff8a3a, 320, [0, 0, 0], 0.45);
+    planet(B, 'earth', 0.5, [-78, 0, 40]); COSMOS.sunEarth = [-78, 0, -5000 + 40];
+    // --- solar system
+    const C = region('solar', [0, 0, -10000], 2500);
+    const sunC = new THREE.Mesh(new THREE.SphereGeometry(5, 40, 24), sunMat); C.add(sunC); glowSprite(C, 0xffc46b, 26, [0, 0, 0], 0.95);
+    const orbitPlanets = [['mercury', 0.5, 9, 4.1], ['venus', 0.9, 12.5, 1.6], ['earth', 0.95, 16, 1], ['mars', 0.7, 20, 0.53], ['jupiter', 2.6, 31, 0.084], ['saturn', 2.2, 41, 0.034], ['uranus', 1.5, 51, 0.012], ['neptune', 1.45, 60, 0.006]]
+      .map(([n, r, R, w], i) => {
+        const ringGeo = new THREE.BufferGeometry().setFromPoints([...Array(129)].map((_, k) => new THREE.Vector3(Math.cos(k / 128 * PI * 2) * R, 0, Math.sin(k / 128 * PI * 2) * R)));
+        C.add(new THREE.Line(ringGeo, new THREE.LineBasicMaterial({ color: 0x5d6b9a, transparent: true, opacity: 0.55, fog: false })));
+        return { p: planet(C, n, r, [R, 0, 0]), R, w, a0: i * 1.7 };
+      });
+    COSMOS.neptuneOrbit = 60;
+    // --- voyager
+    const Dg = region('voyager', [0, 0, -15000], 600);
+    { const v = new THREE.Group(); Dg.add(v); v.rotation.set(0.3, -0.6, 0.15);
+      const dish = mesh(new THREE.CylinderGeometry(1.9, 0.7, 0.35, 32), toon('#f1f2f4'), { outline: 0.03 }); dish.rotation.x = PI / 2; dish.position.z = 0.6; v.add(dish);
+      v.add(mesh(new THREE.CylinderGeometry(0.85, 0.85, 0.7, 10), toon('#d9a441'), { outline: 0.02 }));
+      const boom = mesh(new THREE.CylinderGeometry(0.06, 0.06, 7, 6), toon('#cfd3da'), { outline: 0.01 }); boom.rotation.z = PI / 2; boom.position.x = 3.4; v.add(boom);
+      const rtg = mesh(new THREE.CylinderGeometry(0.25, 0.25, 1.6, 10), toon('#6b6f78'), { outline: 0.012 }); rtg.rotation.z = PI / 2; rtg.position.set(-2.2, -0.3, 0); v.add(rtg);
+      const mag = mesh(new THREE.CylinderGeometry(0.03, 0.03, 9, 4), toon('#cfd3da'), { outline: 0.008 }); mag.rotation.x = 0.9; mag.position.set(0.5, 3.2, -1.5); v.add(mag); }
+    glowSprite(Dg, 0xfff1c0, 6, [-260, 40, -400], 1);   // the Sun, far behind
+    // --- red dwarf
+    const Eg = region('star', [0, 0, -20000], 600);
+    Eg.add(new THREE.Mesh(new THREE.SphereGeometry(6, 48, 32), new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false, map: speckle('#ff5a3a', ['#ff7a4a', '#e8402a', '#ff9a6a'], 900, 2, 1) })));
+    glowSprite(Eg, 0xff6a4a, 34, [0, 0, 0], 0.9); glowSprite(Eg, 0xff3a2a, 70, [0, 0, 0], 0.35);
+    // --- galaxies
+    const galaxy = (parent, R, arms, n, twist, colors, tilt = [0, 0, 0]) => {
+      const pos = new Float32Array(n * 3), col = new Float32Array(n * 3), c = new THREE.Color();
+      const gauss = () => (rnd() + rnd() + rnd() + rnd() - 2) / 2;   // ~normal, -1..1
+      for (let i = 0; i < n; i++) {
+        const kind = rnd(), core = kind < 0.16, disk = kind > 0.72;   // bulge, diffuse disk, or spiral arm
+        const r = core ? Math.abs(gauss()) * R * 0.2 : disk ? Math.pow(rnd(), 0.65) * R : Math.pow(rnd(), 0.7) * R * 0.98;
+        const arm = Math.floor(rnd() * arms);
+        const a = core || disk ? rnd() * PI * 2 : r / R * twist + arm * PI * 2 / arms + gauss() * (0.38 + 0.25 * (1 - r / R));
+        const h = gauss() * R * (core ? 0.07 : 0.02) * (1 - 0.6 * r / R);
+        const jit = R * (disk ? 0.04 : 0.025);
+        pos.set([Math.cos(a) * r + gauss() * jit, h, Math.sin(a) * r + gauss() * jit], i * 3);
+        c.set(core ? colors[0] : colors[1 + Math.floor(rnd() * (colors.length - 1))]); c.multiplyScalar((disk ? 0.28 : 0.5) + rnd() * 0.55); col.set([c.r, c.g, c.b], i * 3);
+      }
+      const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+      const pts = new THREE.Points(geo, new THREE.PointsMaterial({ size: R * 0.016, map: glowTex, vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+      const gal = new THREE.Group(); gal.add(pts); glowSprite(gal, 0xffe2a8, R * 0.55, [0, 0, 0], 0.8); glowSprite(gal, 0xfff4dc, R * 0.22, [0, 0, 0], 0.9);
+      gal.rotation.set(...tilt); parent.add(gal); return gal;
+    };
+    const F = region('galaxy', [0, 0, -40000], 9000);
+    const milky = galaxy(F, 600, 4, 60000, 9.5, ['#fff0c8', '#9fc4ff', '#cfe0ff', '#ffffff', '#ffb6d9', '#bcd3ff']);
+    COSMOS.galaxyCenter = [0, 0, -40000];
+    { const a = 0.55 * 9.5 + 0.3, r = 0.55 * 600; COSMOS.youAreHere = [Math.cos(a) * r, 0, -40000 + Math.sin(a) * r]; }
+    const andro = galaxy(F, 720, 2, 50000, 7.5, ['#fff4dc', '#cfe0ff', '#ffffff', '#ffd9b0'], [1.0, 0, 0.5]);
+    andro.position.set(5200, 900, -2600); COSMOS.andromeda = [5200, 900, -40000 - 2600];
+    // --- cosmic web
+    const H = region('web', [0, 0, -80000], 16000);
+    { const nodes = [...Array(70)].map(() => new THREE.Vector3((rnd() - 0.5) * 10000, (rnd() - 0.5) * 7000, (rnd() - 0.5) * 10000));
+      const pts = [], cols = [], c = new THREE.Color(), palette = ['#ffffff', '#cfe0ff', '#9fc4ff', '#ffd9b0', '#ffb6d9', '#b9a6ff'];
+      const g3 = () => (rnd() + rnd() + rnd() - 1.5) / 1.5;
+      const push = (v, s, bright) => { pts.push(v.x + g3() * s, v.y + g3() * s, v.z + g3() * s); c.set(palette[Math.floor(rnd() * palette.length)]).multiplyScalar(bright * (0.4 + rnd() * 0.6)); cols.push(c.r, c.g, c.b); };
+      const seen = new Set();
+      nodes.forEach((a, ia) => { const near = nodes.map((b, ib) => [b, ib]).filter(([b]) => b !== a).sort((p, q) => a.distanceTo(p[0]) - a.distanceTo(q[0])).slice(0, 3);
+        for (let k = 0; k < 650; k++) push(a, 380, 1.0);                                   // galaxy clusters at the knots
+        near.forEach(([b, ib]) => { const key = Math.min(ia, ib) + '-' + Math.max(ia, ib); if (seen.has(key)) return; seen.add(key);
+          for (let k = 0; k < 700; k++) push(a.clone().lerp(b, rnd()), 260 + 160 * rnd(), 0.6); }); });   // thick, foggy filaments
+      for (let k = 0; k < 6000; k++) push(new THREE.Vector3((rnd() - 0.5) * 11000, (rnd() - 0.5) * 8000, (rnd() - 0.5) * 11000), 0, 0.25);   // faint field galaxies in the voids
+      const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+      H.add(new THREE.Points(geo, new THREE.PointsMaterial({ size: 60, map: glowTex, vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }))); }
+    // a dense star field that follows the camera (deep space has far more stars than the sky dome)
+    const sf = []; for (let i = 0; i < 4000; i++) { const th = rnd() * PI * 2, ph = Math.acos(rnd() * 2 - 1), R = 2600; sf.push(Math.cos(th) * Math.sin(ph) * R, Math.cos(ph) * R, Math.sin(th) * Math.sin(ph) * R); }
+    const sfGeo = new THREE.BufferGeometry(); sfGeo.setAttribute('position', new THREE.Float32BufferAttribute(sf, 3));
+    const starField = new THREE.Points(sfGeo, new THREE.PointsMaterial({ size: 2.2, sizeAttenuation: false, color: 0xffffff, transparent: true, opacity: 0.85, depthWrite: false, fog: false }));
+    g.add(starField);
+    sets.cosmos = { group: g, outdoor: true, cosmic: true,
+      sky: { top: '#02030a', bot: '#070a1e', stars: 1, moon: 0, clouds: false, fog: '#02030a', fogNear: 1e6, fogFar: 2e6, sun: '#ffffff', si: 2.6, dir: [8, 3, 6], hs: '#5a6aa0', hg: '#14141c', hi: 0.55 },
+      update: (t, e, n, props, camera) => {
+        starField.position.copy(camera.position);
+        for (const { r, c, radius } of regions) r.visible = camera.position.distanceTo(c) < radius * 1.6;
+        earthA.rotation.y = t * 0.08; sunB.rotation.y = t * 0.02; sunC.rotation.y = t * 0.05;
+        lineup.forEach((p, i) => { const k = Math.max(0, Math.min(1, (props.lineup || 0) - i)); p.visible = k > 0.01; p.scale.setScalar(Math.max(0.01, k < 1 ? 1 - Math.pow(1 - k, 3) : 1)); });
+        const speed = props.orbitSpeed ?? 1;
+        orbitPlanets.forEach(({ p, R, w, a0 }) => { const a = a0 + t * w * 0.35 * speed; p.position.set(Math.cos(a) * R, 0, Math.sin(a) * R); });
+        milky.rotation.y = -t * 0.025 * (props.galaxySpin ?? 1); andro.rotation.y = t * 0.012;
+      } };
+  }
+  COSMOS.region = (name) => COSMOS[name];
+
   // ================= studio =================
   // a plain colour backdrop with no scenery (shot.backdrop, default brand yellow): thumbnails, logos, cut-outs
   // even, front-on product lighting with neutral bounce and no shadows (no shadow acne in close-ups)
@@ -295,5 +433,5 @@ export function buildSets({ THREE, mesh, toon, skyU }) {
     sky: { sun: '#ffffff', si: 2.0, dir: [3, 6, 10], hs: '#ffffff', hg: '#e6e4ef', hi: 1.45, stars: 0, moon: 0, clouds: false } };
 
   for (const k in sets) sets[k].group.visible = false;
-  return { sets, moons };
+  return { sets, moons, COSMOS };
 }

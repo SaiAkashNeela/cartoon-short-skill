@@ -19,7 +19,8 @@ The skill lives in this folder:
 - `scripts/` — `new_project.sh`, `tts_piper.sh`, `prep_voice.sh`, `stills.sh`, `render_all.sh`
 - `examples/` — complete working episodes (`script.json` + `episode.js`) to copy from: `stopped-sleeping` (one character,
   one set), `coffee-week` (five sets, props, word-anchored SFX) and `doctor` (a supporting cast, a street crowd, and two
-  characters who speak with lip sync)
+  characters who speak with lip sync), `universe` (a 3-minute landscape video: the `cosmos` set, on-screen facts,
+  labels, measure lines and a beat-synced score)
 - `references/episode-api.md` — **read before writing `episode.js`**: poses, face params, envs, props, cameras
 - `references/youtube.md` — publishing: formats, search-first titles/descriptions/tags, captions, chapters, 10-language
   localisations, thumbnails, made-for-kids, quota
@@ -103,6 +104,7 @@ and pick the set:
 | `hospital` | health consequences, the body breaking down, doctors, the "what actually happens" beat |
 | `space` | space, planets, gravity, science, "what if Earth…" |
 | `beach` | travel, summer, sun, heat, water, holidays |
+| `cosmos` | astronomy explainers: a to-scale journey (Earth and Moon, Sun, solar system, Voyager 1, nearest star, Milky Way, Andromeda, cosmic web), with on-screen facts, labels and measure lines |
 | `studio` | not for story beats: a plain backdrop (`backdrop: '#hex'`) for thumbnails, channel art and cut-outs |
 
 Rules of thumb: change set when the story moves in time or place (Day 1 → Day 3), stay put for beats that continue
@@ -126,10 +128,20 @@ Good Shorts scripts are short and visual:
 - Total 20–90 s (4–14 lines). 30–60 s suits most topics; go longer only when the story has enough beats to escalate,
   because a long video with a flat middle loses viewers. Plain spoken English; facts should be true (Shorts get
   fact-checked in the comments).
-- Optional per line: `label` (big pop-in text like "DAY 3"), `mood` (`bright` | `calm` | `eerie` | `tense`, drives
-  the music), `emotion` (a delivery hint for providers that support one), `speaker` (a cast name: that character says the line, lip-synced).
-  Optional `sfx` cues: `{type: pop|whoosh|thud|ding|boing, line, at: start|end, offset}`. Optional `cast` metadata for
+- Optional per line: `label` (big pop-in text like "DAY 3"), `mood` (`bright` | `calm` | `eerie` | `tense` | `space` |
+  `wonder`, drives the music), `energy` (0–3, how busy the music is under this line; needs a `music` block),
+  `emotion` (a delivery hint for providers that support one), `speaker` (a cast name: that character says the line, lip-synced).
+  Optional `sfx` cues: `{type: pop|whoosh|thud|ding|boing|riser|boom|twinkle, line, at: start|end, offset}`, or anchored
+  to a spoken word: `{type: "pop", line: 3, word: "eight"}`. Optional `cast` metadata for
   speakers: `{ "<name>": { "name": "Shown on the tag", "voices": { "<provider>": "<voice for that provider>" } } }`.
+
+**Music that hits the cuts.** Add `"music": {"bpm": 96, "sync": true}` to `script.json` (every regular video should).
+`audio.py` then moves each cut onto the beat and each labelled section onto a downbeat, builds the score in layers from
+each line's `energy` (0 pad, 1 + arpeggio, 2 + bass and hats, 3 + kick and clap), restarts the chord progression at
+each section, plays a riser, a half-beat drop-out and a boom into every section, and ducks the music under the voice.
+Start quiet (energy 0–1 for the hook), build to 3 at the biggest reveal, and come back down for the ending. Optional keys:
+`duck` (0–1, default 0.6), `level` (default 1.0), `transitions` (false turns off the automatic riser and boom). Without a
+`music` block the original mood score plays and timing is unchanged.
 
 Copy the shape of `examples/stopped-sleeping/script.json`. Show the user the script before spending voice credits
 if they haven't already approved the topic/wording — it's cheap to change now and expensive after rendering.

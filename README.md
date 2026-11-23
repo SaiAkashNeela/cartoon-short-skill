@@ -29,11 +29,25 @@ street crowd.
 
 ![Frames from the doctor episode](docs/images/episode-doctor.jpg)
 
+Fourth example: *"How big is the universe?"* (3 min, landscape, `cartoon-shorts/examples/universe/`). Bobble floats
+from the Moon to the edge of the observable universe in the `cosmos` set: every number pops up on the word that says it,
+measure lines and light pulses show the distances, and the music is built on the same beat grid as the cuts.
+
+![Frames from the universe episode](docs/images/episode-universe.jpg)
+
 ## What you can make it do
 
 **Shorts or full videos.** `"format": "short"` renders vertical 1080×1920 Shorts/TikToks/Reels up to 90 s;
 `"format": "video"` renders landscape 1920×1080 YouTube videos of 3–5 minutes with chapters. `scripts/thumbnail.py`
 makes 1280×720 thumbnails from a clean frame, and `scripts/captions.py` writes caption files (and chapters).
+
+**Music that hits the cuts.** With `"music": {"bpm": 96, "sync": true}`, every cut lands on a beat and every new section on
+a downbeat, with a riser and a boom into it. Each line's `energy` (0–3) adds or strips layers, and the music ducks
+under the voice.
+
+**Space and science explainers.** The `cosmos` set is a to-scale journey (Earth and Moon, the Sun, the solar system,
+Voyager 1, the nearest star, the Milky Way, Andromeda, the cosmic web), and any set can show fact cards, 3D labels,
+measure lines and travelling pulses.
 
 **A whole cast.** Bobble can share the screen with anyone the story needs: doctors, bosses, kids, crowds. Each
 person is one line of looks (hair, hats, glasses, lab coat, tie, height), and characters can speak their own lines in
@@ -41,7 +55,7 @@ their own voice, with lip sync and a name tag:
 
 ![Cast](docs/images/cast.jpg)
 
-**8 locations.** Each shot picks where it happens, and the time of day changes the light, the windows and the lamps:
+**9 locations.** Each shot picks where it happens, and the time of day changes the light, the windows and the lamps:
 
 ![Sets](docs/images/sets.jpg)
 
@@ -124,6 +138,7 @@ cartoon-shorts/
   examples/stopped-sleeping/   complete example episode
   examples/coffee-week/        second example: props (mug, cup pyramid) + SFX cues
   examples/doctor/             third example: supporting cast, crowd, lip-synced dialogue
+  examples/universe/           fourth example: 3-minute landscape video, cosmos set, infographics, beat-synced music
   references/*.jpg             set / pose / expression / outfit / lighting sheets (for Claude to look at)
 youtube-mcp/                   MCP server for your YouTube channel (uploads, metadata, comments, analytics)
 docs/

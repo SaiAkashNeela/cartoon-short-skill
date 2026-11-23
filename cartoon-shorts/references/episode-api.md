@@ -21,8 +21,8 @@ export default function episode({ TL, S, E, CUT, D, at, wt, dolly, POSE, fx, smo
 2. Shot fields
 3. Poses
 4. Face parameters, 4b. Cast (more people)
-5. Environments (lighting), 5a. Sets (locations), 5b. Outfits
-6. Effects (`fx`) and props
+5. Environments (lighting), 5a. Sets (locations), 5c. The cosmos set, 5b. Outfits
+6. Effects (`fx`), props and infographics (facts, labels, measure lines, pulses)
 7. Cameras and the set layout
 8. Extending the engine
 
@@ -40,6 +40,8 @@ export default function episode({ TL, S, E, CUT, D, at, wt, dolly, POSE, fx, smo
 | `POSE(name, overrides)` | a pose from the library, with any parameters overridden |
 | `fx` | procedural motion helpers (section 6) |
 | `smooth(a,b,x)`, `lerp`, `clamp`, `easeOutBack` | math helpers |
+| `COSMOS` | centres of the `cosmos` set's regions, plus `sunEarth`, `youAreHere`, `andromeda` (section 5c) |
+| `FORMAT`, `W`, `H` | `'short'` (1080×1920) or `'video'` (1920×1080) and the frame size |
 
 All shot times (`u`) are seconds since the shot started.
 
@@ -180,11 +182,33 @@ room with the bedside lamp on and the moon in the window. `references/sets.jpg` 
 | `street` | sidewalk, curb, road, row of city buildings, street lamp, bench, bin, hydrant | windows and lamp light up at night |
 | `space` | grey moon surface with craters, rocket (right), flag, Earth in a black starry sky | overrides sky and lighting, whatever `env` says |
 | `beach` | sand, sea with moving foam line, palm tree (right), umbrella + towel (left), beach ball | outdoor sky + clouds |
+| `cosmos` | deep space at true relative scale, laid out along -z (see 5c) | overrides sky and lighting; camera far plane 250,000 |
 | `studio` | nothing: a plain backdrop of `shot.backdrop` (default `#ffd93b`) with even, shadow-free front lighting | for thumbnails, logos and cut-outs; render with `STILLS_PNG=1` for lossless stills |
 
 All sets share one layout: the character stands at x≈-0.1, z≈0.9; the back wall of rooms is at z≈-3; the
 interesting props sit in x∈[-3, 3.6]. So the camera framings in section 7 work in every set. Props like the mug and the cup
 pyramid work everywhere. Each set is built in `engine/sets.js`; see section 8 to add your own.
+
+## 5c. The cosmos set (space explainers)
+
+`set: 'cosmos'` is one long scene. Each region only draws when the camera is near it, so a cut from one region to
+the next is a jump through space. `COSMOS` in the context holds the centres. Units are free per region: each one is
+to scale *inside itself*.
+
+| region | `COSMOS.` | what's there | known-good camera `p` → `l` |
+|---|---|---|---|
+| Earth and Moon | `earthMoon` `[0,0,0]` | Earth r 3.2; Moon r 0.87 at x 203.7 (to scale); `props.lineup` 0..7 grows the planets into the gap | wide: `[98,16,222]` → `[102,0,0]`; Bobble by Earth: `[-1.2,2.4,16]` → `[-2.5,1.6,2]` |
+| Sun | `sun` `[0,0,-5000]` | Sun r 55 with glow; Earth r 0.5 at `COSMOS.sunEarth` (to scale against the Sun) | tiny Earth before the Sun: `[-104,4,-4920]` → `[-30,0,-5000]`; side: `[-60,70,-4820]` → `[-38,0,-4985]` |
+| solar system | `solar` `[0,0,-10000]` | Sun and 8 orbiting planets (orbit radii 9–60); `props.orbitSpeed` | `[0,62,-9925]` → `[0,-6,-10000]` |
+| Voyager 1 | `voyager` `[0,0,-15000]` | the probe | `[7,2,-14987]` → `COSMOS.voyager` |
+| nearest star | `star` `[0,0,-20000]` | a red dwarf, r 6 | `[0,4,-19966]` → `COSMOS.star` |
+| Milky Way | `galaxy` `[0,0,-40000]` | 60k-star spiral, radius 600; `COSMOS.youAreHere` marks the Sun; `props.galaxySpin` | `[0,760,-39100]` → `COSMOS.galaxy` |
+| Andromeda | `andromeda` | a tilted spiral beside the Milky Way | side-on to the line between them, about 6,500 out (see `examples/universe`) |
+| cosmic web | `web` `[0,0,-80000]` | filaments of galaxies, region radius 16,000 | `[0,1800,-71000]` → `COSMOS.web` |
+
+To put Bobble in space, give the pose world coordinates (`x`, `y`, `z` all work in the cosmos), turn it to the camera
+with `ry: Math.atan2(cam.x - x, cam.z - z)`, and in `update` set `props.helmet = 1` and call `fx.float(pose, t)`.
+Keep `galaxySpin` constant within a shot: rotation is `t × speed`, so changing the speed mid-shot jumps the galaxy.
 
 ## 5b. Outfits
 
@@ -224,6 +248,17 @@ Props (set in `update`, reset every frame):
 - `props.cups = 0..24` — a pyramid of takeaway cups beside the character (screen-left, x≈-1.45) builds bottom-up, one
   cup per unit, popping in as the value passes each integer; the last 3 lie knocked over in front. Animate it with
   `lerp(a, b, smooth(...))` and add `pop` SFX cues for the fast part. Frame it with a look-at around x≈-0.8.
+
+Infographics (set in `update`, reset every frame; they work in every set):
+- `props.fact = { text, sub, since }` — a big number card at the top of the frame ("384,400 km" / "from Earth to the
+  Moon"). `since` is seconds since it appeared and drives the pop-in, so pass `u - t0` from a word anchor.
+- `props.labels = [{ pos: [x,y,z], text, sub }]` — tags pinned to 3D points, with a ▼ pointer.
+- `props.measure = { from, to, k, text, sub }` — a dashed line drawn from `from` toward `to` as `k` goes 0→1, with
+  its label at the midpoint once `k > 0.6`.
+- `props.pulse = { from, to, k, size, color }` — a glowing dot travelling from `from` to `to` (light crossing a gap,
+  a signal, a planet's orbit). With `from == to` it is a glowing marker.
+- `props.helmet = 1` — a space helmet on Bobble. `fx.float(pose, t)` drifts the pose in zero-g, and `pose.y` lifts
+  the character off the ground in any set.
 
 ## 7. Cameras and the set layout
 

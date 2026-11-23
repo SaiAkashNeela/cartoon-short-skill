@@ -1,0 +1,201 @@
+{
+ "title": "How Big Is the Universe? Every Distance to Scale",
+ "format": "video",
+ "voice": {
+  "provider": "cartesia",
+  "name": "Darius (Engaging Narrator)",
+  "voices": {
+   "cartesia": "23112795-d54e-4560-9568-791a87c30201"
+  }
+ },
+ "music": {
+  "bpm": 96,
+  "style": "space",
+  "sync": true
+ },
+ "brand": {
+  "handle": "@BobbleExplains",
+  "name": "Bobble Explains",
+  "cta": "Subscribe for more what-ifs!",
+  "endCard": 5
+ },
+ "lines": [
+  {
+   "text": "Look up at the night sky. Everything up there is so far away, your brain can't even picture it.",
+   "mood": "wonder",
+   "energy": 0,
+   "emotion": "curious"
+  },
+  {
+   "text": "But let's try anyway. One step at a time.",
+   "mood": "wonder",
+   "energy": 0,
+   "emotion": "excited"
+  },
+  {
+   "text": "Let's start close. The Moon. It's about three hundred eighty-four thousand kilometers away.",
+   "mood": "space",
+   "energy": 1,
+   "emotion": "curious",
+   "label": "THE MOON"
+  },
+  {
+   "text": "Doesn't sound like much? When the Moon is at its farthest, every other planet in our solar system could fit in that gap.",
+   "mood": "space",
+   "energy": 1,
+   "emotion": "excited"
+  },
+  {
+   "text": "Even light, the fastest thing there is, needs over a second to get there.",
+   "mood": "space",
+   "energy": 1,
+   "emotion": "curious"
+  },
+  {
+   "text": "Now the Sun. You could fit about one point three million Earths inside it.",
+   "mood": "space",
+   "energy": 2,
+   "emotion": "excited",
+   "label": "THE SUN"
+  },
+  {
+   "text": "And it's a hundred and fifty million kilometers away.",
+   "mood": "space",
+   "energy": 2,
+   "emotion": "curious"
+  },
+  {
+   "text": "Drive there at a hundred kilometers an hour, and the trip takes about a hundred and seventy years.",
+   "mood": "space",
+   "energy": 2,
+   "emotion": "excited"
+  },
+  {
+   "text": "The sunlight on your face right now? It left the Sun about eight minutes ago.",
+   "mood": "space",
+   "energy": 1,
+   "emotion": "curious"
+  },
+  {
+   "text": "Zoom out, and here's our whole solar system. Eight planets, all circling the Sun.",
+   "mood": "space",
+   "energy": 2,
+   "emotion": "excited",
+   "label": "THE SOLAR SYSTEM"
+  },
+  {
+   "text": "Light from the Sun needs about four hours just to reach Neptune.",
+   "mood": "space",
+   "energy": 2,
+   "emotion": "curious"
+  },
+  {
+   "text": "Our most distant spacecraft, Voyager One, has been flying for almost fifty years.",
+   "mood": "space",
+   "energy": 1,
+   "emotion": "curious"
+  },
+  {
+   "text": "And it's only now about one light-day away. One day, for light.",
+   "mood": "space",
+   "energy": 1,
+   "emotion": "surprised"
+  },
+  {
+   "text": "So what about the nearest other star? Proxima Centauri. About four light-years away.",
+   "mood": "space",
+   "energy": 1,
+   "emotion": "curious",
+   "label": "THE NEAREST STAR"
+  },
+  {
+   "text": "At Voyager's speed, getting there would take around seventy-five thousand years.",
+   "mood": "space",
+   "energy": 2,
+   "emotion": "surprised"
+  },
+  {
+   "text": "And that's just next door. Zoom out again, and this is home. The Milky Way.",
+   "mood": "space",
+   "energy": 3,
+   "emotion": "excited",
+   "label": "THE MILKY WAY"
+  },
+  {
+   "text": "Hundreds of billions of stars, in a disc about a hundred thousand light-years across.",
+   "mood": "space",
+   "energy": 3,
+   "emotion": "excited"
+  },
+  {
+   "text": "And we're right about... here. Not even near the middle.",
+   "mood": "space",
+   "energy": 2,
+   "emotion": "curious"
+  },
+  {
+   "text": "Our Sun circles the galaxy too. One lap takes about two hundred thirty million years.",
+   "mood": "space",
+   "energy": 2,
+   "emotion": "curious"
+  },
+  {
+   "text": "The last time we were in this exact spot, the first dinosaurs were just showing up.",
+   "mood": "space",
+   "energy": 2,
+   "emotion": "surprised"
+  },
+  {
+   "text": "Our closest big neighbor is the Andromeda galaxy. Two and a half million light-years away.",
+   "mood": "wonder",
+   "energy": 1,
+   "emotion": "curious",
+   "label": "ANDROMEDA"
+  },
+  {
+   "text": "The light you'd see from it tonight left before humans even existed.",
+   "mood": "wonder",
+   "energy": 1,
+   "emotion": "surprised"
+  },
+  {
+   "text": "And the Milky Way? It's just one of hundreds of billions of galaxies.",
+   "mood": "space",
+   "energy": 3,
+   "emotion": "excited",
+   "label": "THE UNIVERSE"
+  },
+  {
+   "text": "By most estimates, there are more stars out there than grains of sand on every beach on Earth.",
+   "mood": "space",
+   "energy": 3,
+   "emotion": "excited"
+  },
+  {
+   "text": "The part we can see is about ninety-three billion light-years across.",
+   "mood": "space",
+   "energy": 2,
+   "emotion": "curious"
+  },
+  {
+   "text": "And nobody knows how big the whole thing really is.",
+   "mood": "wonder",
+   "energy": 0,
+   "emotion": "curious"
+  },
+  {
+   "text": "And somewhere in all of that, on one tiny blue planet, there's you.",
+   "mood": "space",
+   "energy": 1,
+   "emotion": "calm",
+   "label": "AND YOU"
+  },
+  {
+   "text": "Watching a video about it. Pretty wild, right?",
+   "mood": "space",
+   "energy": 2,
+   "emotion": "happy"
+  }
+ ],
+ "tail": 2.0
+}

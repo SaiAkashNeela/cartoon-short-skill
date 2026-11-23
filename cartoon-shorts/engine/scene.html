@@ -748,11 +748,13 @@ window.setTime = function (t) {
   skyU.top.value.set(e.top); skyU.bot.value.set(e.bot);
   sun.color.set(e.sun); sun.intensity = e.si; hemi.color.set(e.hs); hemi.groundColor.set(e.hg); hemi.intensity = e.hi;
   scene.fog.color.set(e.fog); scene.fog.near = e.fogNear || 45; scene.fog.far = e.fogFar || 260;
-  starMat.opacity = e.stars; moon.material.opacity = e.moon;
+  starMat.opacity = SET.studio ? 0 : e.stars; moon.material.opacity = SET.studio ? 0 : e.moon;
+  sky.visible = !SET.studio; scene.background = SET.studio ? new THREE.Color(shot.backdrop || '#ffd93b') : null;
+  sun.castShadow = !SET.studio;
   clouds.forEach((c) => { c.visible = SET.outdoor && e.clouds !== false; });
   WINDOW_MOONS.forEach((m) => { m.material.opacity = e.moon; });
   if (SET.update) SET.update(t, e, clamp(ENVS[shot.env].stars));
-  vigEl.style.opacity = 0.6 + (e.stars ? 0.4 : 0);
+  vigEl.style.opacity = SET.studio ? 0 : 0.6 + (e.stars ? 0.4 : 0);
   windU.value = t;
   clouds.forEach((c) => { c.position.x = c.userData.base.x + t * c.userData.speed; });
 

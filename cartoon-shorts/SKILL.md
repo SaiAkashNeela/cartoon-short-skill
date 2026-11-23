@@ -88,6 +88,7 @@ and pick the set:
 | `hospital` | health consequences, the body breaking down, doctors, the "what actually happens" beat |
 | `space` | space, planets, gravity, science, "what if Earth…" |
 | `beach` | travel, summer, sun, heat, water, holidays |
+| `studio` | not for story beats: a plain backdrop (`backdrop: '#hex'`) for thumbnails, channel art and cut-outs |
 
 Rules of thumb: change set when the story moves in time or place (Day 1 → Day 3), stay put for beats that continue
 the same moment, pair set with env for mood (bedroom + night, kitchen + morning, street + storm), and save

@@ -288,6 +288,12 @@ export function buildSets({ THREE, mesh, toon, skyU }) {
     sets.beach = { group: g, outdoor: true, update: (t) => { foam.position.z = -5.2 + Math.sin(t * 0.9) * 0.35; } };
   }
 
+  // ================= studio =================
+  // a plain colour backdrop with no scenery (shot.backdrop, default brand yellow): thumbnails, logos, cut-outs
+  // even, front-on product lighting with neutral bounce and no shadows (no shadow acne in close-ups)
+  sets.studio = { group: new THREE.Group(), outdoor: false, studio: true,
+    sky: { sun: '#ffffff', si: 2.0, dir: [3, 6, 10], hs: '#ffffff', hg: '#e6e4ef', hi: 1.45, stars: 0, moon: 0, clouds: false } };
+
   for (const k in sets) sets[k].group.visible = false;
   return { sets, moons };
 }

@@ -37,7 +37,8 @@ if (mode === 'stills') {
   fs.mkdirSync(path.join(ROOT, 'stills'), { recursive: true });
   for (const t of args.map(Number)) {
     await page.evaluate((t) => window.setTime(t), t);
-    await stage.screenshot({ path: path.join(ROOT, 'stills', `t_${t.toFixed(2)}.jpg`), type: 'jpeg', quality: 85 });
+    const png = !!process.env.STILLS_PNG;  // STILLS_PNG=1: lossless stills (thumbnails, logos, cut-outs)
+    await stage.screenshot({ path: path.join(ROOT, 'stills', `t_${t.toFixed(2)}.${png ? 'png' : 'jpg'}`), type: png ? 'png' : 'jpeg', ...(png ? {} : { quality: 85 }) });
   }
 } else {
   const FPS = 30; const [from, to, out] = [Number(args[0]), Number(args[1]), args[2]];

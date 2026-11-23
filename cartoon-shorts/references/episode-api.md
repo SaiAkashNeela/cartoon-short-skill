@@ -180,6 +180,7 @@ room with the bedside lamp on and the moon in the window. `references/sets.jpg` 
 | `street` | sidewalk, curb, road, row of city buildings, street lamp, bench, bin, hydrant | windows and lamp light up at night |
 | `space` | grey moon surface with craters, rocket (right), flag, Earth in a black starry sky | overrides sky and lighting, whatever `env` says |
 | `beach` | sand, sea with moving foam line, palm tree (right), umbrella + towel (left), beach ball | outdoor sky + clouds |
+| `studio` | nothing: a plain backdrop of `shot.backdrop` (default `#ffd93b`) with even, shadow-free front lighting | for thumbnails, logos and cut-outs; render with `STILLS_PNG=1` for lossless stills |
 
 All sets share one layout: the character stands at x≈-0.1, z≈0.9; the back wall of rooms is at z≈-3; the
 interesting props sit in x∈[-3, 3.6]. So the camera framings in section 7 work in every set. Props like the mug and the cup

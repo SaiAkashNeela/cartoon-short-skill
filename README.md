@@ -1,5 +1,7 @@
 # cartoon-short-skill
 
+<p align="center"><img src="docs/brand/logo_wordmark_transparent.png" width="520" alt="Bobble Explains logo: Bobble waving beside the words BOBBLE EXPLAINS"></p>
+
 A Claude skill that makes **Bobble Explains**: it turns a topic into a finished vertical (1080×1920) animated Short (20–90 s) starring
 **Bobble** (yellow beanie, blue hoodie). You get a toon-shaded 3D world,
 Bobble with a fully expressive face, a narrator voice, procedural music and SFX, and word-by-word captions. It's all
@@ -116,7 +118,7 @@ docs/
 ## Credits
 
 Created by **Sai Akash Neela** ([@SaiAkashNeela](https://github.com/SaiAkashNeela), [saiakashneela.com](https://www.saiakashneela.com)).
-Bobble and the *Bobble Explains* name belong to the author. You're welcome to use the engine, and the Bobble design under
+Bobble, the *Bobble Explains* name and the brand kit in `docs/brand/` belong to the author. You're welcome to use the engine, and the Bobble design under
 the MIT licence, but please brand your own channel with your own name and handle.
 
 Contributions are welcome: open an issue or a pull request. New poses, props, sets and environments are especially welcome.

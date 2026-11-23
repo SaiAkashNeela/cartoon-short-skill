@@ -140,10 +140,10 @@ export const cast = {
   ...Object.fromEntries([...Array(8)].map((_, i) => ['p' + i, { random: i + 3 }]))   // a crowd of 8 varied people
 };
 ```
-Look fields (anything left out falls back to Beanie's): `hoodie`/`hoodieDark` (top colours), `top: 'hoodie' | 'shirt'`,
+Look fields (anything left out falls back to Bobble's): `hoodie`/`hoodieDark` (top colours), `top: 'hoodie' | 'shirt'`,
 `coat` (colour of a long lab coat or scrubs worn over the top), `tie` (colour), `hat: 'beanie' | 'cap' | 'hair' | 'longHair' | 'bun' | 'none'`
 (`beanie`/`beanieBand` colour hats and caps; `hair` colours hair styles and moustaches), `glasses`, `mustache`, `lashes`,
-`skin`, `legs`, `shoe`, `sole`, `height` (1 = Beanie, 0.7 = a kid). `{ random: seed, ...overrides }` makes a varied
+`skin`, `legs`, `shoe`, `sole`, `height` (1 = Bobble, 0.7 = a kid). `{ random: seed, ...overrides }` makes a varied
 person for crowds. `references/cast.jpg` shows examples. The name `hero` is reserved for the main character.
 
 Per shot, add people with `cast`. Anyone not listed is off-screen for that shot:

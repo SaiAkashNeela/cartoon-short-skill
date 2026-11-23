@@ -25,11 +25,11 @@ The skill lives in this folder:
 - `references/cast.jpg`, `sets.jpg`, `poses.jpg`, `faces.jpg`, `outfits.jpg`, `environments.jpg` — rendered sheets of every location, pose,
   expression, outfit preset and lighting look; view them when choreographing
 
-## The character: Beanie
+## The character: Bobble
 
-The default character is **Beanie**: round white head, yellow beanie, blue hoodie (the `Classic` look), created by
-Sai Akash Neela as the mascot of the **Beanie Explains** channel. A series is recognised by its character in the first
-half-second, so keep one character, one outfit and one narrator voice across a user's episodes. Use Beanie as-is, or
+The default character is **Bobble** (named after his bobble hat): round white head, yellow beanie, blue hoodie (the `Classic` look), created by
+Sai Akash Neela as the mascot of the **Bobble Explains** channel. A series is recognised by its character in the first
+half-second, so keep one character, one outfit and one narrator voice across a user's episodes. Use Bobble as-is, or
 give a user's own series its own look (`export const character = {...}`, presets in `references/outfits.jpg`).
 The narration talks *about* "you"; the character acts it out.
 
@@ -41,7 +41,7 @@ Add a `brand` block to `script.json` to stamp the user's channel on the video:
 ```
 `handle` adds a small watermark in the top-right safe zone. `endCard` (seconds) appends an end card after the tail: the
 character's avatar, the channel name, the handle and a call-to-action, with a chime. Leave out `brand` for no branding.
-Only brand videos with a channel the user owns or names. The examples carry `@BeanieExplains`, which belongs to the
+Only brand videos with a channel the user owns or names. The examples carry `@BobbleExplains`, which belongs to the
 author; never copy it into someone else's video. `new_project.sh` strips it from the copied example for that reason.
 
 ## The model: one shot per narrated line
@@ -56,7 +56,7 @@ which is what makes the comedy timing land — e.g. the character nods off exact
 If the story involves other people (a doctor, a boss, a friend, parents, a crowd), show them. A beat like "the doctor
 tells you…" lands much harder with a doctor in the frame. Declare them once in `episode.js` (`export const cast = {...}`)
 and add them to any shot with `cast: { name: { pose, face, update } }`. There's no limit on the number of people; crowds
-come from `{ random: <seed> }` looks. Beanie (the `hero`) stays the protagonist; leave out a shot's `pose` to cut away
+come from `{ random: <seed> }` looks. Bobble (the `hero`) stays the protagonist; leave out a shot's `pose` to cut away
 from him entirely.
 
 - **Looks:** each person is a look: outfit colours, `top: 'hoodie' | 'shirt'`, `coat` (lab coat / scrubs colour),

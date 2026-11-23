@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT — Copyright (c) 2026 Sai Akash Neela — https://github.com/SaiAkashNeela/cartoon-short-skill
-// "What if you never went to the doctor?" — Beanie plus a supporting cast; Mom and the doctor speak (lip-synced).
-export const character = {};  // Beanie, Classic look
+// "What if you never went to the doctor?" — Bobble plus a supporting cast; Mom and the doctor speak (lip-synced).
+export const character = {};  // Bobble, Classic look
 
 export const cast = {
   mom: { top: 'shirt', hoodie: '#e8655a', hoodieDark: '#c84d43', hat: 'longHair', hair: '#2b1d14', lashes: true },
@@ -51,7 +51,7 @@ export default function episode({ D, at, dolly, POSE, fx, smooth, lerp, MARK, fa
         cam: (u) => dolly(u, D[1], [1.0, 2.5, 8.2], [0.7, 2.5, 7.0], [-0.2, 2.15, 0.6]),
         update: ({ u, pose }) => { if (u > great) fx.bounce(pose, u, 1.2, 6); }
       },
-      { // 2 Mom (speaks): get that looked at — Beanie waves it off
+      { // 2 Mom (speaks): get that looked at — Bobble waves it off
         set: 'kitchen', env: 'morning',
         pose: [[0, POSE('idle', put(L, { ry: facing(L, R) }))], [really, POSE('shrug', put(L, { ry: facing(L, R) }))]],
         face: [[0, { smile: 0.3 }], [really, { eyeOpen: 0.5, lookY: -0.7, brow: 0.3, smile: -0.1, mouthW: 0.8 }]],

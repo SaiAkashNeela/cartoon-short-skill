@@ -179,7 +179,7 @@ if want('faces'):
 # ---- outfits: one render per character look ----
 if want('outfits'):
     OUTFITS = [
-        ('Beanie (Classic)', {}, 'hips', {'eyeOpen': .55, 'brow': .45, 'smile': 1, 'blush': .6}),
+        ('Bobble (Classic)', {}, 'hips', {'eyeOpen': .55, 'brow': .45, 'smile': 1, 'blush': .6}),
         ('Ember', {'hoodie': '#d9412b', 'hoodieDark': '#a92f1f', 'beanie': '#2f2f36', 'beanieBand': '#1f1f25', 'sole': '#2f2f36'}, 'cheer', {'eyeOpen': .05, 'open': .7, 'smile': 1}),
         ('Midnight', {'hoodie': '#26252e', 'hoodieDark': '#18171e', 'beanie': '#e2493b', 'beanieBand': '#b8352a'}, 'think', {'browA': -24, 'brow': .2, 'smile': .1, 'mouthW': .7}),
         ('Bubblegum', {'hoodie': '#f28cb8', 'hoodieDark': '#d66a99', 'beanie': '#ffffff', 'beanieBand': '#e9e9ef', 'sole': '#f28cb8'}, 'wave', {'smile': .9, 'blush': .7}),

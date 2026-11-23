@@ -3,7 +3,7 @@
 // ctx: TL, S (line starts), E (line ends), CUT (shot starts), D (shot durations), at(line, word) -> shot-relative time,
 //      wt(line, word) -> absolute time, dolly(u, dur, p0, p1, look), POSE(name, overrides), fx helpers, smooth/lerp/clamp.
 
-export const character = {};  // Beanie, in his Classic look (blue hoodie, yellow beanie): the star of Beanie Explains
+export const character = {};  // Bobble, in his Classic look (blue hoodie, yellow beanie): the star of Bobble Explains
 
 export default function episode({ E, CUT, D, at, dolly, POSE, fx, smooth, lerp }) {
   const sw = at(2, 'switching'), wo = at(2, 'without');   // day 3 microsleeps land on these words

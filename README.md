@@ -1,8 +1,8 @@
 # cartoon-short-skill
 
-A Claude skill that makes **Beanie Explains**: it turns a topic into a finished vertical (1080×1920) animated Short (20–90 s) starring
-**Beanie** (yellow beanie, blue hoodie). You get a toon-shaded 3D world,
-Beanie with a fully expressive face, a narrator voice, procedural music and SFX, and word-by-word captions. It's all
+A Claude skill that makes **Bobble Explains**: it turns a topic into a finished vertical (1080×1920) animated Short (20–90 s) starring
+**Bobble** (yellow beanie, blue hoodie). You get a toon-shaded 3D world,
+Bobble with a fully expressive face, a narrator voice, procedural music and SFX, and word-by-word captions. It's all
 rendered in code with **Three.js + headless Chromium + ffmpeg**: no Remotion and no AI video generation.
 
 <p align="center"><img src="docs/images/preview.gif" width="270" alt="Animated preview: the character nods off and jolts awake, then a tree opens its eyes"></p>
@@ -23,13 +23,13 @@ Third example: *"What if you never went to the doctor?"* (47 s, `cartoon-shorts/
 Mom and Dr. Patel each speak in their own voice with lip sync and a name tag, alongside a nurse, a boss, a coworker and a
 street crowd.
 
-<p align="center"><img src="docs/images/preview-doctor.gif" width="270" alt="Animated preview: a street crowd in the rain, then Dr. Patel explains to Beanie in the hospital while a nurse looks on"></p>
+<p align="center"><img src="docs/images/preview-doctor.gif" width="270" alt="Animated preview: a street crowd in the rain, then Dr. Patel explains to Bobble in the hospital while a nurse looks on"></p>
 
 ![Frames from the doctor episode](docs/images/episode-doctor.jpg)
 
 ## What you can make it do
 
-**A whole cast.** Beanie can share the screen with anyone the story needs: doctors, bosses, kids, crowds. Each
+**A whole cast.** Bobble can share the screen with anyone the story needs: doctors, bosses, kids, crowds. Each
 person is one line of looks (hair, hats, glasses, lab coat, tie, height), and characters can speak their own lines in
 their own voice, with lip sync and a name tag:
 
@@ -47,7 +47,7 @@ their own voice, with lip sync and a name tag:
 
 ![Expressions](docs/images/faces.jpg)
 
-**Outfits.** Beanie is the Classic look. Other presets are for side characters or other series, one line of colours each (presets in `docs/images/outfits.json`):
+**Outfits.** Bobble is the Classic look. Other presets are for side characters or other series, one line of colours each (presets in `docs/images/outfits.json`):
 
 ![Outfits](docs/images/outfits.jpg)
 
@@ -61,7 +61,7 @@ regenerates them, and the episode frames and GIF come from the optional MP4.
 **Branding.** Add a `brand` block to `script.json` for a channel watermark and an end card, built from the
 character's own face. Leave it out for an unbranded video.
 
-<p align="center"><img src="docs/images/endcard.jpg" width="300" alt="End card: Beanie avatar, BEANIE EXPLAINS, @BeanieExplains, Follow for more what-ifs"></p>
+<p align="center"><img src="docs/images/endcard.jpg" width="300" alt="End card: Bobble avatar, BEANIE EXPLAINS, @BobbleExplains, Follow for more what-ifs"></p>
 
 ## Install
 
@@ -116,7 +116,7 @@ docs/
 ## Credits
 
 Created by **Sai Akash Neela** ([@SaiAkashNeela](https://github.com/SaiAkashNeela), [saiakashneela.com](https://www.saiakashneela.com)).
-Beanie and the *Beanie Explains* name belong to the author. You're welcome to use the engine, and the Beanie design under
+Bobble and the *Bobble Explains* name belong to the author. You're welcome to use the engine, and the Bobble design under
 the MIT licence, but please brand your own channel with your own name and handle.
 
 Contributions are welcome: open an issue or a pull request. New poses, props, sets and environments are especially welcome.

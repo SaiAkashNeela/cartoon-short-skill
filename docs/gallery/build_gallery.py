@@ -219,7 +219,7 @@ def episode_sheet(mp4, name, title, beats, gif=None, gif_span=None):
                         os.path.join(OUT, gif)], check=True)
 
 
-# ---- frames from finished episodes (optional): build_gallery.py <sleep.mp4> [<coffee.mp4>] ----
+# ---- frames from finished episodes (optional): build_gallery.py <sleep.mp4> [<coffee.mp4>] [<doctor.mp4>] ----
 if len(sys.argv) > 1:
     episode_sheet(sys.argv[1], 'episode.jpg', 'Example: "What if you stopped sleeping?"',
                   [(1.6, 'Hook', 'think + curious'), (5.4, 'Day 1', 'hips + smug'), (10.9, 'Day 3', 'nod (microsleep)'),
@@ -230,6 +230,11 @@ if len(sys.argv) > 2:
                   [(1.6, 'Hook', 'kitchen + sip'), (8.6, 'Day 1', 'office, wired'), (18.4, 'Day 3', 'bedroom, spill'),
                    (23.7, 'Day 5', 'street + storm'), (31.6, 'Day 7', 'kitchen, cup pyramid'), (40.5, 'End', 'hospital, wide awake')],
                   gif='preview-coffee.gif', gif_span=(29.5, 9.0))
+if len(sys.argv) > 3:
+    episode_sheet(sys.argv[3], 'episode-doctor.jpg', 'Example: "What if you never went to the doctor?"',
+                  [(2.6, 'Hook', 'bedroom, stretch'), (10.7, 'Mom speaks', 'kitchen, lip sync + tag'), (17.4, 'Year 3', 'office, boss + coworker'),
+                   (29.9, 'Year 10', 'street crowd, storm'), (33.4, 'Dr. Patel speaks', 'hospital, doctor + nurse'), (42.3, 'Finale', 'the whole cast')],
+                  gif='preview-doctor.gif', gif_span=(30.2, 8.8))
 
 # the skill ships the sheets Claude should look at while choreographing
 for f in ('poses.jpg', 'faces.jpg', 'outfits.jpg', 'environments.jpg', 'sets.jpg', 'cast.jpg'):

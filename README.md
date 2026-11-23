@@ -19,6 +19,14 @@ follows the hand and a cup pyramid that builds as the narration says "twelve cup
 
 ![Frames from the coffee episode](docs/images/episode-coffee.jpg)
 
+Third example: *"What if you never went to the doctor?"* (47 s, `cartoon-shorts/examples/doctor/`). It shows off the cast:
+Mom and Dr. Patel each speak in their own voice with lip sync and a name tag, alongside a nurse, a boss, a coworker and a
+street crowd.
+
+<p align="center"><img src="docs/images/preview-doctor.gif" width="270" alt="Animated preview: a street crowd in the rain, then Dr. Patel explains to Beanie in the hospital while a nurse looks on"></p>
+
+![Frames from the doctor episode](docs/images/episode-doctor.jpg)
+
 ## What you can make it do
 
 **A whole cast.** Beanie can share the screen with anyone the story needs: doctors, bosses, kids, crowds. Each
@@ -47,7 +55,7 @@ their own voice, with lip sync and a name tag:
 
 ![Lighting](docs/images/environments.jpg)
 
-These sheets are rendered by the engine itself: `python3 docs/gallery/build_gallery.py [sleep.mp4] [coffee.mp4]`
+These sheets are rendered by the engine itself: `python3 docs/gallery/build_gallery.py [sleep.mp4] [coffee.mp4] [doctor.mp4]`
 regenerates them, and the episode frames and GIF come from the optional MP4.
 
 **Branding.** Add a `brand` block to `script.json` for a channel watermark and an end card, built from the

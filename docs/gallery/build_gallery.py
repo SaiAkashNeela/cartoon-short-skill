@@ -105,7 +105,7 @@ ims = render(shots)
 codes = [f"POSE('{n}')" if n != 'walk' else "fx.walk + ry: 1.2" for n, *_ in POSES]
 codes[8] = "POSE('wave') + fx.wave"; codes[12] = "POSE('scared') + fx.tremble"; codes[15] = "POSE('fallen') / fx.fall"; codes[17] = "POSE('holdMug') + props.mug"; codes[18] = "POSE('sip') + props.mugTilt"
 sheet('poses.jpg', 'Poses', 'Built-in body poses — use POSE(name, overrides) in episode.js keyframes',
-      [(im, n, c) for im, (n, *_), c in zip(ims, POSES, codes)], cols=6, crop=(0, 160, 1080, 1760))
+      [(im, n, c) for im, (n, *_), c in zip(ims, POSES, codes)], cols=5, crop=(0, 160, 1080, 1760))
 
 # ---- faces ----
 FACES = [

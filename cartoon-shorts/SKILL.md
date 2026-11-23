@@ -4,7 +4,7 @@ license: MIT (see LICENSE). Copyright (c) 2026 Sai Akash Neela
 metadata:
   author: Sai Akash Neela
   homepage: https://github.com/SaiAkashNeela/cartoon-short-skill
-description: Make vertical 9:16 animated "what if" / explainer Shorts (YouTube Shorts, TikTok, Reels) starring a toon-shaded 3D cartoon character with a big expressive face, narrated voiceover, procedural music/SFX and bold word-by-word captions — rendered entirely in code with Three.js + headless Chromium + ffmpeg (no Remotion, no AI video generation). Use this whenever the user wants a cartoon short, a faceless animated story video, a "what if you..." / "what happens when..." video, a stickman-style explainer, an animated narration with a character, or "another episode" of their cartoon series — even if they only give a topic like "do one about drinking only coffee for a week".
+description: Make vertical 9:16 animated "what if" / explainer Shorts (YouTube Shorts, TikTok, Reels) starring a toon-shaded 3D cartoon character with a big expressive face, moving through story-matched locations (bedroom, kitchen, office, street, hospital, space, beach, field), narrated voiceover, procedural music/SFX and bold word-by-word captions — rendered entirely in code with Three.js + headless Chromium + ffmpeg (no Remotion, no AI video generation). Use this whenever the user wants a cartoon short, a faceless animated story video, a "what if you..." / "what happens when..." video, a stickman-style explainer, an animated narration with a character, or "another episode" of their cartoon series — even if they only give a topic like "do one about drinking only coffee for a week".
 ---
 
 # Cartoon Shorts
@@ -21,7 +21,8 @@ The skill lives in this folder:
   the coffee one shows props (mug, cup pyramid), word-anchored SFX cues and a mug held through every pose
 - `references/episode-api.md` — **read before writing `episode.js`**: poses, face params, envs, props, cameras
 - `references/voices.md` — Cartesia voice details and the free Piper fallback
-- `references/poses.jpg`, `faces.jpg`, `outfits.jpg`, `environments.jpg` — rendered sheets of every pose, expression, outfit preset and lighting look; view them when choreographing
+- `references/sets.jpg`, `poses.jpg`, `faces.jpg`, `outfits.jpg`, `environments.jpg` — rendered sheets of every location, pose,
+  expression, outfit preset and lighting look; view them when choreographing
 
 ## The character: Beanie
 
@@ -45,9 +46,31 @@ author; never copy it into someone else's video. `new_project.sh` strips it from
 ## The model: one shot per narrated line
 
 A video is 4–7 narrated lines. Each line is one shot: the camera cuts (with a whoosh + flash + zoom punch)
-0.3 s before the line starts. Per shot you choose a lighting look, keyframe the character's pose and face,
-and give a camera move. Keyframes can be anchored to the exact moment a word is spoken (`at(line, 'word')`),
+0.3 s before the line starts. Per shot you choose **where it happens (set)**, the time of day (env), keyframe the
+character's pose and face, and give a camera move. Keyframes can be anchored to the exact moment a word is spoken (`at(line, 'word')`),
 which is what makes the comedy timing land — e.g. the character nods off exactly on "switching off".
+
+## Locations: match the set to the story
+
+Viewers should see *where* each beat happens. A whole video in one place feels static, and a location change on each
+cut is one of the cheapest ways to keep people watching. For every line, ask "where would this moment happen?"
+and pick the set:
+
+| set | use it for |
+|---|---|
+| `field` | outdoors, nature, walking, the default; the only set with the tree (and `props.treeEyes`) |
+| `bedroom` | sleep, waking up, mornings, staying in, phones at night |
+| `kitchen` | food, drinks, diets, cooking, anything you eat or drink |
+| `office` | work, money, studying, screens, productivity, deadlines |
+| `street` | the city, commuting, going out, crowds, night life |
+| `hospital` | health consequences, the body breaking down, doctors, the "what actually happens" beat |
+| `space` | space, planets, gravity, science, "what if Earth…" |
+| `beach` | travel, summer, sun, heat, water, holidays |
+
+Rules of thumb: change set when the story moves in time or place (Day 1 → Day 3), stay put for beats that continue
+the same moment, pair set with env for mood (bedroom + night, kitchen + morning, street + storm), and save
+`hospital` for the consequence beat. Two shots in a row in the same set are fine; a whole video in one set usually isn't.
+`references/sets.jpg` shows every set; their props and safe camera framings are in `references/episode-api.md`.
 
 The narrator is not the character (the script talks *about* "you"), so the mouth is animated by
 expression keyframes, not lip-synced to the voice. Keep it that way unless the user wants the character to talk.
@@ -92,9 +115,9 @@ to its punctuation, so punctuate the script the way it should be spoken.
 
 ### 4. Choreograph → `episode.js`
 Read `references/episode-api.md`, then write one shot per line. Work from the story: for each line decide
-*what the character does*, *what face they make*, *what the light is*, and *where the camera is*. Anchor the key
-beats to words with `at(line, 'word')`. Start from the example episode — its camera positions are known-good
-framings of the set.
+*where it happens* (set), *what the character does*, *what face they make*, *what the light is*, and *where the camera is*. Anchor the key
+beats to words with `at(line, 'word')`. Start from `examples/coffee-week/episode.js`: it moves through five sets, and its camera positions are known-good
+framings.
 
 ### 5. Preview stills (always, before the full render)
 ```bash

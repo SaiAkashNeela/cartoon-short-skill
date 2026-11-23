@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT — Copyright (c) 2026 Sai Akash Neela — https://github.com/SaiAkashNeela/cartoon-short-skill
 // "What if you drank only coffee for a week?" — one shot per script line.
-export const character = {};  // Beanie, in his Classic look: the same character every episode of Beanie Explains
+export const character = {};  // Classic look: keep the same character across the channel
 
 export default function episode({ E, CUT, D, at, dolly, POSE, fx, smooth, lerp, clamp }) {
   const hold = (name, extra = {}) => POSE(name, { bSx: -0.6, bSz: 0.15, bEx: -1.15, bEz: 0.35, ...extra });  // any pose, mug held at chest
@@ -17,7 +17,7 @@ export default function episode({ E, CUT, D, at, dolly, POSE, fx, smooth, lerp, 
   return {
     shots: [
       { // 0 hook: blissful sip, then eyes snap open at camera
-        env: 'day',
+        set: 'kitchen', env: 'morning',          // hook: the first coffee of the week
         pose: [[0, POSE('holdMug')], [c0 - 0.7, POSE('sip')], [ew - 0.2, POSE('sip')], [ew + 0.15, hold('idle', { hz: 0.12 })]],
         face: [[0, { smile: 0.4 }], [c0 - 0.5, { eyeOpen: 0.05, smile: 0.5, blush: 0.5 }], [ew - 0.2, { eyeOpen: 0.05, smile: 0.5, blush: 0.5 }],
           [ew + 0.05, { browA: -26, brow: 0.15, smile: 0.15, mouthW: 0.7 }]],
@@ -25,7 +25,7 @@ export default function episode({ E, CUT, D, at, dolly, POSE, fx, smooth, lerp, 
         update: ({ u, props }) => { props.mug = 1; props.mugTilt = -0.9 * smooth(c0 - 0.5, c0 - 0.1, u) * (1 - smooth(ew - 0.2, ew + 0.1, u)); }
       },
       { // 1 day one: wired and loving it
-        env: 'morning',
+        set: 'office', env: 'day',               // wired and 'productive'
         pose: [[0, hold('idle')], [un - 0.2, POSE('cheer', { bSz: 2.0 })], [hr - 0.2, POSE('cheer', { bSz: 2.0 })], [hr + 0.1, hold('hips', { bSz: 0.2 })],
           [lv - 0.4, hold('hips', { bSz: 0.2 })], [lv - 0.1, POSE('cheer', { bSz: 2.0 })]],
         face: [[0, { eyeOpen: 1, smile: 0.6 }], [un - 0.2, { eyeOpen: 1, brow: 0.3, smile: 1, open: 0.5, mouthW: 1.1 }], [hr, { wide: 1, smile: 0.9, open: 0.3, mouthW: 1 }],
@@ -37,7 +37,7 @@ export default function episode({ E, CUT, D, at, dolly, POSE, fx, smooth, lerp, 
         }
       },
       { // 2 day three: wrecked, shaking, spilling
-        env: 'golden',
+        set: 'bedroom', env: 'night',            // can't sleep
         pose: [[0, hold('tired')], [sh - 0.3, hold('tired')], [sh, hold('tired', { lean: 0.05, hx: -0.05 })]],
         face: [[0, { eyeOpen: 0.45, bags: 0.85, brow: -0.25, smile: -0.25 }], [he, { eyeOpen: 0.45, bags: 0.85, brow: -0.6, smile: -0.5 }],
           [sh, { wide: 1, bags: 0.9, brow: -0.5, open: 0.2, mouthW: 0.6, sweat: 1, lookX: 0.4, lookY: 0.6 }], [sp + 0.6, { eyeOpen: 0.5, bags: 0.9, brow: 0.5, smile: -0.6, sweat: 1, sweatY: 40 }]],
@@ -50,7 +50,7 @@ export default function episode({ E, CUT, D, at, dolly, POSE, fx, smooth, lerp, 
         }
       },
       { // 3 day five: running on empty
-        env: 'storm',
+        set: 'street', env: 'storm',             // out in the grey, running on empty
         pose: [[0, hold('sway')], [bd - 0.2, hold('sway')], [bd + 0.3, hold('tired', { hx: 0.45, lean: 0.15 })], [mu - 0.2, hold('tired', { hx: 0.45, lean: 0.15 })], [mu + 0.1, hold('jolt', { bSz: 0.2 })]],
         face: [[0, { eyeOpen: 0.35, bags: 1, brow: -0.4, smile: -0.3, sweat: 0.6 }], [bd + 0.3, { eyeOpen: 0.7, bags: 1, brow: -0.6, smile: -0.4, lookY: 0.9 }],
           [mu, { wide: 1, bags: 1, brow: -0.6, open: 0.7, mouthW: 0.6, sweat: 1, lookY: 0.6 }]],
@@ -58,7 +58,7 @@ export default function episode({ E, CUT, D, at, dolly, POSE, fx, smooth, lerp, 
         update: ({ u, t, pose, props }) => { props.mug = 1; props.cups = lerp(6, 10, smooth(0, D[3], u)); fx.tremble(pose, t, 0.8); }
       },
       { // 4 day seven: desperate sips, cups everywhere, panic
-        env: 'dusk',
+        set: 'kitchen', env: 'dusk',             // the cup pyramid at home
         pose: [[0, POSE('holdMug')], [jt - 0.2, POSE('sip')], [tw - 0.1, POSE('sip')], [tw + 0.25, hold('scared', { bSz: 0.3, bEx: -1.4 })], [lim, hold('scared', { bSz: 0.3, bEx: -1.4, x: 0.1 })]],
         face: [[0, { eyeOpen: 0.5, bags: 1, smile: -0.3 }], [jt - 0.1, { eyeOpen: 0.05, bags: 1, smile: -0.2 }], [tw + 0.15, { wide: 1, bags: 1, brow: -0.6, open: 0.8, mouthW: 0.6, sweat: 1, lookX: -0.7, lookY: 0.7 }],
           [tt, { wide: 1, bags: 1, brow: -0.7, open: 0.5, mouthW: 0.55, sweat: 1, lookX: 0, lookY: 0 }], [lim + 0.4, { wide: 1, bags: 1, brow: -0.8, open: 0.9, mouthW: 0.6, sweat: 1, sweatY: 60 }]],
@@ -71,7 +71,7 @@ export default function episode({ E, CUT, D, at, dolly, POSE, fx, smooth, lerp, 
         }
       },
       { // 5 the end: collapses... and still can't sleep
-        env: 'night',
+        set: 'hospital', env: 'night',           // the consequence
         pose: [[0, hold('sway')], [1.4, hold('sway', { hz: 0.2, side: 0.05 })], [fallU, hold('sway', { hx: 0.2, lean: -0.05 })], [fallU + 0.55, POSE('fallen')]],
         face: [[0, { eyeOpen: 0.35, bags: 1, smile: -0.2, sweat: 0.6 }], [fallU - 0.2, { eyeOpen: 0.15, bags: 1, smile: 0 }],
           [fallU + 0.5, { eyeOpen: 0.05, bags: 1, smile: 0 }], [fallU + 1.3, { eyeOpen: 0.05, bags: 1, smile: 0 }], [fallU + 1.45, { wide: 1, bags: 1, brow: -0.3, smile: -0.2, mouthW: 0.7 }]],

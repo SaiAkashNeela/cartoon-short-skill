@@ -21,7 +21,7 @@ export default function episode({ TL, S, E, CUT, D, at, wt, dolly, POSE, fx, smo
 2. Shot fields
 3. Poses
 4. Face parameters
-5. Environments (lighting), 5b. Outfits
+5. Environments (lighting), 5a. Sets (locations), 5b. Outfits
 6. Effects (`fx`) and props
 7. Cameras and the set layout
 8. Extending the engine
@@ -47,7 +47,8 @@ All shot times (`u`) are seconds since the shot started.
 
 ```js
 {
-  env: 'golden',                                   // lighting look (section 5)
+  set: 'kitchen',                                  // location (section 5a); default 'field'
+  env: 'golden',                                   // time of day / lighting look (section 5)
   pose: [[0, POSE('tired')], [at(2,'switching') + 0.7, POSE('nod')], ...],   // [time u, pose] keyframes
   face: [[0, { eyeOpen: 0.4, bags: 0.8 }], ...],   // [time u, face params] keyframes
   cam: (u) => ({ p: [x,y,z], l: [x,y,z], roll: 0, fov: 38 }),   // camera position, look-at, optional roll/fov
@@ -128,6 +129,26 @@ curious `{browA:-24, brow:.1, smile:.1, mouthW:.7}` · asleep `{eyeOpen:0, smile
 `env` per shot: `day`, `morning` (warm, bright), `golden` (late afternoon), `dusk` (purple/pink, a few stars),
 `night` (dark blue, stars, moon), `storm` (grey, flat). Changing env between shots is the cheapest way to show time passing.
 
+## 5a. Sets (locations)
+
+`set` per shot picks the location; `env` still picks the time of day, so `set: 'bedroom', env: 'night'` is a dark
+room with the bedside lamp on and the moon in the window. `references/sets.jpg` shows all of them.
+
+| set | what's in frame behind the character | notes |
+|---|---|---|
+| `field` | big tree (left), wheat field, fence, hills | outdoor sky + clouds; only set with `props.treeEyes` |
+| `bedroom` | window with sky/moon (left), curtains, bed (right), nightstand lamp, poster, rug | lamp turns on at dusk/night |
+| `kitchen` | mint counters, sink under the window, coffee machine, fridge (right), fruit bowl, checker floor | pendant lamp |
+| `office` | window with city skyline (left), desk + monitor with code (right), bookshelf, plant, clock | screen glows; clock ticks |
+| `hospital` | heart monitor with scrolling ECG (left), IV stand, hospital bed (right), privacy curtain | cool light |
+| `street` | sidewalk, curb, road, row of city buildings, street lamp, bench, bin, hydrant | windows and lamp light up at night |
+| `space` | grey moon surface with craters, rocket (right), flag, Earth in a black starry sky | overrides sky and lighting, whatever `env` says |
+| `beach` | sand, sea with moving foam line, palm tree (right), umbrella + towel (left), beach ball | outdoor sky + clouds |
+
+All sets share one layout: the character stands at x≈-0.1, z≈0.9; the back wall of rooms is at z≈-3; the
+interesting props sit in x∈[-3, 3.6]. So the camera framings in section 7 work in every set. Props like the mug and the cup
+pyramid work everywhere. Each set is built in `engine/sets.js`; see section 8 to add your own.
+
 ## 5b. Outfits
 
 `references/outfits.jpg` shows these presets; paste one as `export const character = {...}`:
@@ -189,7 +210,9 @@ nervousness, or `roll` for a disoriented dutch angle.
 
 ## 8. Extending the engine
 
-`engine/scene.html` is plain Three.js; new props or sets go there:
+New **sets** go in `engine/sets.js`: copy an existing block, build into a `THREE.Group`, follow the layout rules at
+the top of that file, and register it as `sets.<name> = { group, outdoor, update(t, env, night) }`. Then add it to the
+sets sheet in `docs/gallery/build_gallery.py`. `engine/scene.html` is plain Three.js; new props go there:
 - build meshes with `mesh(geometry, toon(color), { outline: 0.02 })` to match the outlined cel-shaded look;
 - expose the prop through the `props` object in `setTime` (add a default, then apply it after `shot.update`), so
   episodes can drive it per frame;

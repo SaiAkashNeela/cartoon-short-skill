@@ -6,7 +6,7 @@ set -euo pipefail
 SKILL="$(cd "$(dirname "$0")/.." && pwd)"
 DIR="${1:?usage: new_project.sh <project_dir> [example]}"; EX="${2:-stopped-sleeping}"
 mkdir -p "$DIR"/{vo_raw,vo,stills}
-cp "$SKILL"/engine/{scene.html,render.mjs,audio.py,package.json} "$DIR"/
+cp "$SKILL"/engine/{scene.html,sets.js,render.mjs,audio.py,package.json} "$DIR"/
 [ -f "$DIR/script.json" ] || python3 - "$SKILL/examples/$EX/script.json" "$DIR/script.json" <<'PY'
 import json, sys  # copy the example script without its "brand" block: brand new videos with the user's own channel
 s = json.load(open(sys.argv[1])); s.pop('brand', None); json.dump(s, open(sys.argv[2], 'w'), indent=1, ensure_ascii=False)

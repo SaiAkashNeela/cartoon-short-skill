@@ -16,7 +16,7 @@ FONT = next((p for p in ['/usr/share/fonts/opentype/inter/Inter-ExtraBold.otf', 
 FONT_R = next((p for p in ['/usr/share/fonts/opentype/inter/Inter-Medium.otf', '/usr/share/fonts/opentype/inter/Inter-Regular.otf'] if os.path.exists(p)), FONT)
 os.makedirs(OUT, exist_ok=True)
 WORK = tempfile.mkdtemp(prefix='gallery-')
-for f in ('scene.html', 'render.mjs', 'package.json'):
+for f in ('scene.html', 'sets.js', 'render.mjs', 'package.json'):
     shutil.copy(os.path.join(ENGINE, f), WORK)
 subprocess.run(['npm', 'install', '--silent', '--no-audit', '--no-fund'], cwd=WORK, check=True)
 
@@ -25,7 +25,7 @@ const DATA = %s;
 export const character = %s;
 export default function ({ POSE, fx }) {
   return { blinks: [], punch: false, shots: DATA.map((s) => ({
-    env: s.env, pose: [[0, POSE(s.pose, s.over || {})]], face: [[0, s.face || {}]],
+    env: s.env, set: s.set || 'field', pose: [[0, POSE(s.pose, s.over || {})]], face: [[0, s.face || {}]],
     cam: () => ({ p: s.p, l: s.l }),
     update: ({ t, pose, props }) => { if (s.fx) fx[s.fx](pose, t); if (s.mug) { props.mug = 1; props.mugTilt = s.pose === 'sip' ? -0.9 : 0; } }
   })) };
@@ -73,87 +73,106 @@ def sheet(name, title, subtitle, tiles, cols, crop=None, tile_w=300):
 
 
 MED = dict(p=[0.9, 2.3, 7.4], l=[-0.1, 1.95, 0.9], env='day')
+ONLY = set(filter(None, os.environ.get('GALLERY_ONLY', '').split(',')))   # e.g. GALLERY_ONLY=sets for quick iteration
+want = lambda name: not ONLY or name in ONLY
+
+# ---- sets (locations) ----
+if want('sets'):
+    SETS = [('field', 'day', 'hips'), ('bedroom', 'night', 'tired'), ('kitchen', 'morning', 'holdMug'), ('office', 'day', 'think'),
+            ('hospital', 'day', 'scared'), ('street', 'night', 'wave'), ('space', 'day', 'cheer'), ('beach', 'golden', 'stretch')]
+    FACE = {'hips': {'eyeOpen': .55, 'brow': .45, 'smile': 1}, 'tired': {'eyeOpen': .4, 'bags': .9, 'smile': -.3}, 'holdMug': {'smile': .6},
+            'think': {'browA': -24, 'brow': .1, 'mouthW': .7}, 'scared': {'wide': 1, 'brow': -.6, 'open': .8, 'mouthW': .6, 'sweat': 1},
+            'wave': {'smile': .9, 'blush': .5}, 'cheer': {'eyeOpen': .05, 'open': .7, 'smile': 1}, 'stretch': {'eyeOpen': .05, 'open': .6, 'smile': .3, 'mouthW': .7}}
+    SETCAM = dict(p=[1.3, 2.6, 8.6], l=[0.2, 2.4, 0.0])
+    ims = render([dict(SETCAM, set=st, env=en, pose=po, face=FACE[po], fx='wave' if po == 'wave' else None, mug=po == 'holdMug') for st, en, po in SETS])
+    sheet('sets.jpg', 'Sets', "Per-shot location: set: '<name>' — pick the place the line happens in; env still sets the time of day",
+          [(im, st, f"set: '{st}', env: '{en}'") for im, (st, en, po) in zip(ims, SETS)], cols=4, crop=(0, 0, 1080, 1920), tile_w=300)
 
 # ---- poses ----
-POSES = [
-    ('idle', {}, {'smile': .2}, None, None),
-    ('think', {}, {'browA': -24, 'brow': .1, 'smile': .1, 'mouthW': .7, 'lookY': -.3}, None, None),
-    ('stretch', {}, {'eyeOpen': .05, 'open': .6, 'smile': .3, 'mouthW': .7}, None, None),
-    ('hips', {}, {'eyeOpen': .55, 'brow': .45, 'smile': 1, 'mouthW': 1.15, 'blush': .6}, None, None),
-    ('cheer', {}, {'eyeOpen': .05, 'open': .7, 'smile': 1}, None, None),
-    ('point', {}, {'brow': .3, 'lookX': .8, 'smile': .4}, None, None),
-    ('shrug', {}, {'brow': -.4, 'browA': -20, 'smile': -.2}, None, None),
-    ('facepalm', {}, {'eyeOpen': 0, 'smile': -.6}, None, None),
-    ('wave', {}, {'smile': .9, 'blush': .5}, 'wave', None),
-    ('tired', {}, {'eyeOpen': .45, 'bags': .8, 'brow': -.25, 'smile': -.25}, None, None),
-    ('nod', {}, {'eyeOpen': 0, 'bags': .8, 'open': .15, 'mouthW': .5}, None, None),
-    ('jolt', {}, {'wide': 1, 'brow': -.5, 'open': .35, 'mouthW': .6, 'sweat': 1}, None, None),
-    ('scared', {}, {'wide': 1, 'brow': -.6, 'open': .9, 'mouthW': .6, 'sweat': 1, 'lookX': -.9}, 'tremble', None),
-    ('sway', {}, {'eyeOpen': .3, 'bags': 1, 'smile': -.2}, None, None),
-    ('sit', {}, {'eyeOpen': .6, 'smile': .3}, None, dict(p=[0.8, 1.6, 6.2], l=[-0.1, 1.05, 0.9])),
-    ('fallen', {}, {'eyeOpen': 0, 'smile': .5, 'mouthW': .6, 'blush': .8}, None, dict(p=[0.1, 6.6, 3.2], l=[-0.1, 0.35, -0.4])),
-    ('walk', {'ry': 1.2}, {'smile': .4}, 'walk', None),
-    ('holdMug', {}, {'smile': .5}, None, None),
-    ('sip', {}, {'eyeOpen': .05, 'smile': .5, 'blush': .5}, None, None),
-]
-shots = []
-for name, over, face, fxn, cam in POSES:
-    s = dict(MED, pose='idle' if name == 'walk' else name, over=over, face=face, fx=fxn, mug=name in ('holdMug', 'sip'))
-    if cam: s.update(cam)
-    shots.append(s)
-ims = render(shots)
-codes = [f"POSE('{n}')" if n != 'walk' else "fx.walk + ry: 1.2" for n, *_ in POSES]
-codes[8] = "POSE('wave') + fx.wave"; codes[12] = "POSE('scared') + fx.tremble"; codes[15] = "POSE('fallen') / fx.fall"; codes[17] = "POSE('holdMug') + props.mug"; codes[18] = "POSE('sip') + props.mugTilt"
-sheet('poses.jpg', 'Poses', 'Built-in body poses — use POSE(name, overrides) in episode.js keyframes',
-      [(im, n, c) for im, (n, *_), c in zip(ims, POSES, codes)], cols=5, crop=(0, 160, 1080, 1760))
+if want('poses'):
+    POSES = [
+        ('idle', {}, {'smile': .2}, None, None),
+        ('think', {}, {'browA': -24, 'brow': .1, 'smile': .1, 'mouthW': .7, 'lookY': -.3}, None, None),
+        ('stretch', {}, {'eyeOpen': .05, 'open': .6, 'smile': .3, 'mouthW': .7}, None, None),
+        ('hips', {}, {'eyeOpen': .55, 'brow': .45, 'smile': 1, 'mouthW': 1.15, 'blush': .6}, None, None),
+        ('cheer', {}, {'eyeOpen': .05, 'open': .7, 'smile': 1}, None, None),
+        ('point', {}, {'brow': .3, 'lookX': .8, 'smile': .4}, None, None),
+        ('shrug', {}, {'brow': -.4, 'browA': -20, 'smile': -.2}, None, None),
+        ('facepalm', {}, {'eyeOpen': 0, 'smile': -.6}, None, None),
+        ('wave', {}, {'smile': .9, 'blush': .5}, 'wave', None),
+        ('tired', {}, {'eyeOpen': .45, 'bags': .8, 'brow': -.25, 'smile': -.25}, None, None),
+        ('nod', {}, {'eyeOpen': 0, 'bags': .8, 'open': .15, 'mouthW': .5}, None, None),
+        ('jolt', {}, {'wide': 1, 'brow': -.5, 'open': .35, 'mouthW': .6, 'sweat': 1}, None, None),
+        ('scared', {}, {'wide': 1, 'brow': -.6, 'open': .9, 'mouthW': .6, 'sweat': 1, 'lookX': -.9}, 'tremble', None),
+        ('sway', {}, {'eyeOpen': .3, 'bags': 1, 'smile': -.2}, None, None),
+        ('sit', {}, {'eyeOpen': .6, 'smile': .3}, None, dict(p=[0.8, 1.6, 6.2], l=[-0.1, 1.05, 0.9])),
+        ('fallen', {}, {'eyeOpen': 0, 'smile': .5, 'mouthW': .6, 'blush': .8}, None, dict(p=[0.1, 6.6, 3.2], l=[-0.1, 0.35, -0.4])),
+        ('walk', {'ry': 1.2}, {'smile': .4}, 'walk', None),
+        ('holdMug', {}, {'smile': .5}, None, None),
+        ('sip', {}, {'eyeOpen': .05, 'smile': .5, 'blush': .5}, None, None),
+    ]
+    shots = []
+    for name, over, face, fxn, cam in POSES:
+        s = dict(MED, pose='idle' if name == 'walk' else name, over=over, face=face, fx=fxn, mug=name in ('holdMug', 'sip'))
+        if cam: s.update(cam)
+        shots.append(s)
+    ims = render(shots)
+    codes = [f"POSE('{n}')" if n != 'walk' else "fx.walk + ry: 1.2" for n, *_ in POSES]
+    codes[8] = "POSE('wave') + fx.wave"; codes[12] = "POSE('scared') + fx.tremble"; codes[15] = "POSE('fallen') / fx.fall"; codes[17] = "POSE('holdMug') + props.mug"; codes[18] = "POSE('sip') + props.mugTilt"
+    sheet('poses.jpg', 'Poses', 'Built-in body poses — use POSE(name, overrides) in episode.js keyframes',
+          [(im, n, c) for im, (n, *_), c in zip(ims, POSES, codes)], cols=5, crop=(0, 160, 1080, 1760))
 
 # ---- faces ----
-FACES = [
-    ('neutral', {}), ('laugh', {'eyeOpen': .05, 'smile': .8, 'open': .7, 'mouthW': 1.1}),
-    ('smug', {'eyeOpen': .55, 'brow': .45, 'browA': -18, 'smile': 1, 'mouthW': 1.15, 'blush': .6}),
-    ('curious', {'browA': -24, 'brow': .1, 'smile': .1, 'mouthW': .7}),
-    ('shocked', {'wide': 1, 'brow': -.6, 'open': .9, 'mouthW': .6, 'sweat': 1}),
-    ('angry', {'brow': 1, 'smile': -.6, 'eyeOpen': .7, 'mouthW': .9}),
-    ('worried', {'brow': -.7, 'smile': -.4, 'sweat': 1, 'lookX': -.5}),
-    ('sad', {'brow': -.8, 'smile': -.8, 'eyeOpen': .6, 'lookY': .5}),
-    ('tired', {'eyeOpen': .4, 'bags': .9, 'brow': -.25, 'smile': -.3}),
-    ('yawn', {'eyeOpen': .05, 'open': 1, 'mouthW': .6, 'smile': .2}),
-    ('asleep', {'eyeOpen': 0, 'smile': .5, 'mouthW': .6, 'blush': .8}),
-    ('embarrassed', {'blush': 1, 'smile': .3, 'lookX': .8, 'browY': -10, 'sweat': .8}),
-]
-CLOSE = dict(p=[0.45, 2.72, 4.2], l=[-0.12, 2.58, 0.9], env='day')
-ims = render([dict(CLOSE, pose='idle', face=f) for _, f in FACES])
-fmt = lambda f: ', '.join(f'{k}:{v}' for k, v in list(f.items())[:2]) or '(defaults)'
-sheet('faces.jpg', 'Expressions', 'Face keyframes — any mix of eyeOpen, wide, brow, browA, smile, open, mouthW, bags, sweat, blush, lookX/Y',
-      [(im, n, fmt(f)) for im, (n, f) in zip(ims, FACES)], cols=6, crop=(90, 440, 990, 1340), tile_w=260)
+if want('faces'):
+    FACES = [
+        ('neutral', {}), ('laugh', {'eyeOpen': .05, 'smile': .8, 'open': .7, 'mouthW': 1.1}),
+        ('smug', {'eyeOpen': .55, 'brow': .45, 'browA': -18, 'smile': 1, 'mouthW': 1.15, 'blush': .6}),
+        ('curious', {'browA': -24, 'brow': .1, 'smile': .1, 'mouthW': .7}),
+        ('shocked', {'wide': 1, 'brow': -.6, 'open': .9, 'mouthW': .6, 'sweat': 1}),
+        ('angry', {'brow': 1, 'smile': -.6, 'eyeOpen': .7, 'mouthW': .9}),
+        ('worried', {'brow': -.7, 'smile': -.4, 'sweat': 1, 'lookX': -.5}),
+        ('sad', {'brow': -.8, 'smile': -.8, 'eyeOpen': .6, 'lookY': .5}),
+        ('tired', {'eyeOpen': .4, 'bags': .9, 'brow': -.25, 'smile': -.3}),
+        ('yawn', {'eyeOpen': .05, 'open': 1, 'mouthW': .6, 'smile': .2}),
+        ('asleep', {'eyeOpen': 0, 'smile': .5, 'mouthW': .6, 'blush': .8}),
+        ('embarrassed', {'blush': 1, 'smile': .3, 'lookX': .8, 'browY': -10, 'sweat': .8}),
+    ]
+    CLOSE = dict(p=[0.45, 2.72, 4.2], l=[-0.12, 2.58, 0.9], env='day')
+    ims = render([dict(CLOSE, pose='idle', face=f) for _, f in FACES])
+    fmt = lambda f: ', '.join(f'{k}:{v}' for k, v in list(f.items())[:2]) or '(defaults)'
+    sheet('faces.jpg', 'Expressions', 'Face keyframes — any mix of eyeOpen, wide, brow, browA, smile, open, mouthW, bags, sweat, blush, lookX/Y',
+          [(im, n, fmt(f)) for im, (n, f) in zip(ims, FACES)], cols=6, crop=(90, 440, 990, 1340), tile_w=260)
 
 # ---- outfits: one render per character look ----
-OUTFITS = [
-    ('Beanie (Classic)', {}, 'hips', {'eyeOpen': .55, 'brow': .45, 'smile': 1, 'blush': .6}),
-    ('Ember', {'hoodie': '#d9412b', 'hoodieDark': '#a92f1f', 'beanie': '#2f2f36', 'beanieBand': '#1f1f25', 'sole': '#2f2f36'}, 'cheer', {'eyeOpen': .05, 'open': .7, 'smile': 1}),
-    ('Midnight', {'hoodie': '#26252e', 'hoodieDark': '#18171e', 'beanie': '#e2493b', 'beanieBand': '#b8352a'}, 'think', {'browA': -24, 'brow': .2, 'smile': .1, 'mouthW': .7}),
-    ('Bubblegum', {'hoodie': '#f28cb8', 'hoodieDark': '#d66a99', 'beanie': '#ffffff', 'beanieBand': '#e9e9ef', 'sole': '#f28cb8'}, 'wave', {'smile': .9, 'blush': .7}),
-    ('Forest', {'hoodie': '#3f8f4f', 'hoodieDark': '#2f6f3c', 'beanie': '#8a5a34', 'beanieBand': '#6d4426'}, 'point', {'brow': .3, 'lookX': .8, 'smile': .4}),
-    ('Royal', {'hoodie': '#6b45c6', 'hoodieDark': '#5233a0', 'beanie': '#33c4b0', 'beanieBand': '#26a090', 'sole': '#33c4b0'}, 'shrug', {'brow': -.4, 'browA': -20, 'smile': -.2}),
-    ('Sunset', {'hoodie': '#f08a24', 'hoodieDark': '#c96c12', 'beanie': '#3b78db', 'beanieBand': '#2d5fb3'}, 'stretch', {'eyeOpen': .05, 'open': .6, 'smile': .3, 'mouthW': .7}),
-    ('Frost', {'hoodie': '#e9eef5', 'hoodieDark': '#c9d3e0', 'beanie': '#4fb6e8', 'beanieBand': '#3594c2', 'sole': '#4fb6e8'}, 'scared', {'wide': 1, 'brow': -.6, 'open': .9, 'mouthW': .6, 'sweat': 1}),
-]
-tiles = []
-for name, look, pose, face in OUTFITS:
-    im = render([dict(MED, pose=pose, face=face, fx='wave' if pose == 'wave' else None)], character=look)[0]
-    tiles.append((im, name, (f"hoodie {look['hoodie']}" if look else 'default colours')))
-sheet('outfits.jpg', 'Outfits', "Restyle the character per series — export const character = { hoodie, hoodieDark, beanie, beanieBand, ... }",
-      tiles, cols=4, crop=(0, 160, 1080, 1760))
-json.dump({n: l for n, l, *_ in OUTFITS}, open(os.path.join(OUT, 'outfits.json'), 'w'), indent=1)
+if want('outfits'):
+    OUTFITS = [
+        ('Beanie (Classic)', {}, 'hips', {'eyeOpen': .55, 'brow': .45, 'smile': 1, 'blush': .6}),
+        ('Ember', {'hoodie': '#d9412b', 'hoodieDark': '#a92f1f', 'beanie': '#2f2f36', 'beanieBand': '#1f1f25', 'sole': '#2f2f36'}, 'cheer', {'eyeOpen': .05, 'open': .7, 'smile': 1}),
+        ('Midnight', {'hoodie': '#26252e', 'hoodieDark': '#18171e', 'beanie': '#e2493b', 'beanieBand': '#b8352a'}, 'think', {'browA': -24, 'brow': .2, 'smile': .1, 'mouthW': .7}),
+        ('Bubblegum', {'hoodie': '#f28cb8', 'hoodieDark': '#d66a99', 'beanie': '#ffffff', 'beanieBand': '#e9e9ef', 'sole': '#f28cb8'}, 'wave', {'smile': .9, 'blush': .7}),
+        ('Forest', {'hoodie': '#3f8f4f', 'hoodieDark': '#2f6f3c', 'beanie': '#8a5a34', 'beanieBand': '#6d4426'}, 'point', {'brow': .3, 'lookX': .8, 'smile': .4}),
+        ('Royal', {'hoodie': '#6b45c6', 'hoodieDark': '#5233a0', 'beanie': '#33c4b0', 'beanieBand': '#26a090', 'sole': '#33c4b0'}, 'shrug', {'brow': -.4, 'browA': -20, 'smile': -.2}),
+        ('Sunset', {'hoodie': '#f08a24', 'hoodieDark': '#c96c12', 'beanie': '#3b78db', 'beanieBand': '#2d5fb3'}, 'stretch', {'eyeOpen': .05, 'open': .6, 'smile': .3, 'mouthW': .7}),
+        ('Frost', {'hoodie': '#e9eef5', 'hoodieDark': '#c9d3e0', 'beanie': '#4fb6e8', 'beanieBand': '#3594c2', 'sole': '#4fb6e8'}, 'scared', {'wide': 1, 'brow': -.6, 'open': .9, 'mouthW': .6, 'sweat': 1}),
+    ]
+    tiles = []
+    for name, look, pose, face in OUTFITS:
+        im = render([dict(MED, pose=pose, face=face, fx='wave' if pose == 'wave' else None)], character=look)[0]
+        tiles.append((im, name, (f"hoodie {look['hoodie']}" if look else 'default colours')))
+    sheet('outfits.jpg', 'Outfits', "Restyle the character per series — export const character = { hoodie, hoodieDark, beanie, beanieBand, ... }",
+          tiles, cols=4, crop=(0, 160, 1080, 1760))
+    json.dump({n: l for n, l, *_ in OUTFITS}, open(os.path.join(OUT, 'outfits.json'), 'w'), indent=1)
 
 # ---- environments ----
-ENVS = ['day', 'morning', 'golden', 'dusk', 'night', 'storm']
-WIDE = dict(p=[2.0, 2.45, 9.0], l=[-0.7, 2.45, 0])
-ims = render([dict(WIDE, env=e, pose='hips', face={'smile': .4}) for e in ENVS])
-sheet('environments.jpg', 'Lighting', "Per-shot env: '<name>' — switching env between shots shows time passing",
-      [(im, e, f"env: '{e}'") for im, e in zip(ims, ENVS)], cols=6, crop=(0, 0, 1080, 1920), tile_w=240)
+if want('environments'):
+    ENVS = ['day', 'morning', 'golden', 'dusk', 'night', 'storm']
+    WIDE = dict(p=[2.0, 2.45, 9.0], l=[-0.7, 2.45, 0])
+    ims = render([dict(WIDE, env=e, pose='hips', face={'smile': .4}) for e in ENVS])
+    sheet('environments.jpg', 'Lighting', "Per-shot env: '<name>' — switching env between shots shows time passing",
+          [(im, e, f"env: '{e}'") for im, e in zip(ims, ENVS)], cols=6, crop=(0, 0, 1080, 1920), tile_w=240)
 
-# ---- frames from a finished episode (optional): build_gallery.py <final.mp4> ----
+    # ---- frames from a finished episode (optional): build_gallery.py <final.mp4> ----
+
 def episode_sheet(mp4, name, title, beats, gif=None, gif_span=None):
     tiles = []
     for t, label, what in beats:
@@ -180,6 +199,6 @@ if len(sys.argv) > 2:
                   gif='preview-coffee.gif', gif_span=(29.5, 9.0))
 
 # the skill ships the sheets Claude should look at while choreographing
-for f in ('poses.jpg', 'faces.jpg', 'outfits.jpg', 'environments.jpg'):
-    shutil.copy(os.path.join(OUT, f), os.path.join(ROOT, 'cartoon-shorts', 'references', f))
+for f in ('poses.jpg', 'faces.jpg', 'outfits.jpg', 'environments.jpg', 'sets.jpg'):
+    if os.path.exists(os.path.join(OUT, f)): shutil.copy(os.path.join(OUT, f), os.path.join(ROOT, 'cartoon-shorts', 'references', f))
 shutil.rmtree(WORK)

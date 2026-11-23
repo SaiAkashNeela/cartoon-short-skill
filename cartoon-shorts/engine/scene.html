@@ -51,6 +51,7 @@
 <script type="module">
 import * as THREE from 'three';
 import * as EP from './episode.js';
+import { buildSets } from './sets.js';
 
 const TL = await (await fetch('timeline.json')).json();
 const S = TL.starts, E = TL.lineEnds;
@@ -148,6 +149,8 @@ for (let i = 0; i < 14; i++) {
   scene.add(g); clouds.push(g);
 }
 
+// ---------- the default 'field' set (everything built from here to the character is grouped into it) ----------
+const fieldStart = new Set(scene.children);
 // ---------- ground ----------
 const ground = mesh(new THREE.PlaneGeometry(800, 800), toon('#79c23f'), { cast: false });
 ground.rotation.x = -Math.PI / 2; scene.add(ground);
@@ -299,6 +302,13 @@ function smallTree(x, z, s) {
   scene.add(g);
 }
 smallTree(-30, -40, 1.4); smallTree(25, -55, 1.6); smallTree(55, -30, 1.2); smallTree(-60, -70, 1.8); smallTree(14, -90, 1.5); smallTree(-14, -24, 1.0);
+const fieldSet = new THREE.Group(); scene.add(fieldSet);
+scene.children.filter((c) => !fieldStart.has(c) && c !== fieldSet).forEach((c) => fieldSet.add(c));
+
+// ---------- other sets (engine/sets.js): bedroom, kitchen, office, hospital, street, space, beach ----------
+const { sets: SETS, moons: WINDOW_MOONS } = buildSets({ THREE, mesh, toon, skyU });
+SETS.field = { group: fieldSet, outdoor: true };
+for (const k in SETS) scene.add(SETS[k].group);
 
 // ---------- character (original design: yellow beanie, blue hoodie) ----------
 const CH = {};
@@ -554,6 +564,7 @@ const ENVS = {
   storm:   { top: '#3a4450', bot: '#8a949c', sun: '#d8e0e8', si: 1.2, dir: [4, 12, 6], hs: '#9aa6b2', hg: '#3a4a2a', hi: 1.0, fog: '#7f8a94', stars: 0, moon: 0 }
 };
 for (const s of SHOTS) if (!ENVS[s.env]) throw new Error(`unknown env "${s.env}" — available: ${Object.keys(ENVS).join(', ')}`);
+for (const s of SHOTS) if (s.set && !SETS[s.set]) throw new Error(`unknown set "${s.set}" — available: ${Object.keys(SETS).join(', ')}`);
 
 // automatic blinks (deterministic) unless the episode lists its own
 const BLINKS = EPI.blinks || (() => { const out = []; let b = 0.9, r = 99; while (b < TL.duration) { out.push(b); r = (r * 16807) % 2147483647; b += 2.2 + (r / 2147483647) * 2.5; } return out; })();
@@ -644,10 +655,16 @@ function applyPose(p) {
 }
 window.setTime = function (t) {
   const sh = shotAt(t), shot = SHOTS[sh], u = t - CUT[sh];
-  const e = ENVS[shot.env];
+  const setName = shot.set || 'field', SET = SETS[setName];
+  for (const k in SETS) SETS[k].group.visible = k === setName;
+  const e = Object.assign({}, ENVS[shot.env], SET.sky || {});   // a set may override sky/lighting (e.g. space)
   skyU.top.value.set(e.top); skyU.bot.value.set(e.bot);
   sun.color.set(e.sun); sun.intensity = e.si; hemi.color.set(e.hs); hemi.groundColor.set(e.hg); hemi.intensity = e.hi;
-  scene.fog.color.set(e.fog); starMat.opacity = e.stars; moon.material.opacity = e.moon;
+  scene.fog.color.set(e.fog); scene.fog.near = e.fogNear || 45; scene.fog.far = e.fogFar || 260;
+  starMat.opacity = e.stars; moon.material.opacity = e.moon;
+  clouds.forEach((c) => { c.visible = SET.outdoor && e.clouds !== false; });
+  WINDOW_MOONS.forEach((m) => { m.material.opacity = e.moon; });
+  if (SET.update) SET.update(t, e, clamp(ENVS[shot.env].stars));
   vigEl.style.opacity = 0.6 + (e.stars ? 0.4 : 0);
   windU.value = t;
   clouds.forEach((c) => { c.position.x = c.userData.base.x + t * c.userData.speed; });

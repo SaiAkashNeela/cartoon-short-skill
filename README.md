@@ -12,13 +12,18 @@ Example output: *"What if you stopped sleeping?"* (27 s). The full episode is in
 ![Frames from the example episode](docs/images/episode.jpg)
 
 Second example: *"What if you drank only coffee for a week?"* (41 s, `cartoon-shorts/examples/coffee-week/`). It shows off
-props: a mug that follows the hand and a cup pyramid that builds as the narration says "twelve cups a day".
+locations and props: it moves from the kitchen to the office, bedroom, street and finally the hospital, with a mug that
+follows the hand and a cup pyramid that builds as the narration says "twelve cups a day".
 
 <p align="center"><img src="docs/images/preview-coffee.gif" width="270" alt="Animated preview: the character sips frantically as a pyramid of coffee cups builds up beside him"></p>
 
 ![Frames from the coffee episode](docs/images/episode-coffee.jpg)
 
 ## What you can make it do
+
+**8 locations.** Each shot picks where it happens, and the time of day changes the light, the windows and the lamps:
+
+![Sets](docs/images/sets.jpg)
 
 **19 built-in poses.** Blend between them with keyframes, or override any joint:
 
@@ -73,7 +78,8 @@ $S/scripts/render_all.sh ~/my-short final.mp4  # full render
 cartoon-shorts/
   SKILL.md                     workflow Claude follows
   LICENSE                      MIT (copy shipped with the skill)
-  engine/scene.html            Three.js renderer: set, character rig, procedural face, lighting, captions
+  engine/scene.html            Three.js renderer: character rig, procedural face, field set, lighting, captions, branding
+  engine/sets.js               the other locations: bedroom, kitchen, office, hospital, street, space, beach
   engine/render.mjs            headless Chromium frame capture -> ffmpeg
   engine/audio.py              word timings + procedural music/SFX mix
   scripts/                     new_project, tts_piper, prep_voice, stills, render_all
@@ -81,7 +87,7 @@ cartoon-shorts/
   references/voices.md         Cartesia + Piper voice setup
   examples/stopped-sleeping/   complete example episode
   examples/coffee-week/        second example: props (mug, cup pyramid) + SFX cues
-  references/*.jpg             pose / expression / outfit / lighting sheets (for Claude to look at)
+  references/*.jpg             set / pose / expression / outfit / lighting sheets (for Claude to look at)
 docs/
   images/                      README gallery
   gallery/build_gallery.py     regenerates the gallery from the engine

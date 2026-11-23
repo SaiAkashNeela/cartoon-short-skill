@@ -33,6 +33,16 @@
     justify-content: center; padding-bottom: 140px; font-family: 'Inter', sans-serif;
     background: radial-gradient(ellipse at 50% 45%, rgba(12,10,24,0.82) 0%, rgba(12,10,24,0.95) 70%); }
   #end canvas { width: 320px; height: 320px; }
+  /* landscape long-form videos (script.json "format": "video", 1920x1080) */
+  #stage.video #cap { top: 790px; left: 240px; right: 240px; font-size: 82px; }
+  #stage.video #cap span { -webkit-text-stroke: 17px #0d0d10; }
+  #stage.video #spk { top: 705px; }
+  #stage.video #day { top: 60px; font-size: 124px; }
+  #stage.video #wm { top: 46px; right: 56px; }
+  #stage.video #end { padding-bottom: 0; }
+  #stage.video #end canvas { width: 250px; height: 250px; }
+  #stage.video #end .name { font-size: 104px; margin-top: 14px; }
+  #stage.video #end .cta { margin-top: 30px; }
   #end .name { font-weight: 800; font-size: 112px; line-height: 1.0; color: #ffd93b; text-align: center; margin-top: 26px;
     paint-order: stroke fill; -webkit-text-stroke: 20px #0d0d10; text-shadow: 0 9px 0 #0d0d10; padding: 0 40px; }
   #end .handle { font-weight: 800; font-size: 50px; color: #fff; margin-top: 18px; paint-order: stroke fill; -webkit-text-stroke: 9px #0d0d10; }
@@ -60,7 +70,12 @@ const TL = await (await fetch('timeline.json')).json();
 const S = TL.starts, E = TL.lineEnds;
 // one shot per voice line; each cut lands 0.3s before its line starts
 const CUT = S.map((s, i) => (i === 0 ? 0 : s - 0.3));
-const W = 1080, H = 1920;
+// format: "short" = vertical 1080x1920 (YouTube Shorts / TikTok / Reels), "video" = landscape 1920x1080 (regular uploads)
+const FORMAT = TL.format === 'video' ? 'video' : 'short';
+const W = FORMAT === 'video' ? 1920 : 1080, H = FORMAT === 'video' ? 1080 : 1920;
+{ const st = document.getElementById('stage'); st.style.width = W + 'px'; st.style.height = H + 'px'; st.classList.add(FORMAT);
+  // ?clean renders without captions, labels, name tags or watermark (thumbnails)
+  if (new URLSearchParams(location.search).has('clean')) for (const id of ['cap', 'spk', 'day', 'wm']) document.getElementById(id).style.visibility = 'hidden'; }
 
 // ---------- helpers ----------
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -613,7 +628,7 @@ const MARK = { center: [-0.1, 0.9], left: [-1.15, 1.5], right: [1.05, 1.5], farL
 // ry that turns a character at `from` toward `to`; `cheat` < 1 keeps faces readable by only half-turning (cartoon
 // "cheat to camera"); pass 1 for a true profile
 const facing = (from, to, cheat = 0.5) => Math.atan2(to[0] - from[0], to[1] - from[1]) * cheat;
-const ctx = { THREE, TL, S, E, CUT, D, wt, at, dolly, POSE, P, fx, smooth, lerp, clamp, easeOutBack, MARK, facing };
+const ctx = { THREE, TL, S, E, CUT, D, wt, at, dolly, POSE, P, fx, smooth, lerp, clamp, easeOutBack, MARK, facing, FORMAT, W, H };
 const EPI = EP.default(ctx);
 const SHOTS = EPI.shots;
 if (SHOTS.length !== S.length) console.error(`episode has ${SHOTS.length} shots but the script has ${S.length} lines — need exactly one shot per line`);

@@ -3,6 +3,7 @@
 // Usage (from the project dir):
 //   node render.mjs stills 1.0 4.2 ...        -> stills/t_<time>.jpg
 //   node render.mjs frames <from> <to> <out>  -> encodes frames [from,to) to <out>.mp4
+// Env: STILLS_PNG=1 lossless stills, CLEAN=1 hide captions/labels/watermark, CHROMIUM_PATH custom browser.
 // Set CHROMIUM_PATH to use a specific Chrome/Chromium binary.
 import http from 'node:http';
 import fs from 'node:fs';
@@ -26,10 +27,12 @@ const port = server.address().port;
 
 const [mode, ...args] = process.argv.slice(2);
 const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}), args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
-const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
+const TLJ = JSON.parse(fs.readFileSync(path.join(ROOT, 'timeline.json'), 'utf8'));
+const [VW, VH] = TLJ.format === 'video' ? [1920, 1080] : [1080, 1920];   // landscape long-form vs vertical Shorts
+const page = await browser.newPage({ viewport: { width: VW, height: VH }, deviceScaleFactor: 1 });
 page.on('console', (m) => { if (m.type() === 'error') console.error('PAGE:', m.text()); });
 page.on('pageerror', (e) => { console.error('PAGEERR:', e.message); process.exit(1); });  // fail fast instead of waiting for READY
-await page.goto(`http://localhost:${port}/scene.html`);
+await page.goto(`http://localhost:${port}/scene.html${process.env.CLEAN ? '?clean' : ''}`);   // CLEAN=1: no captions/watermark (thumbnails)
 await page.waitForFunction(() => window.READY === true, null, { timeout: 120000 });
 const stage = await page.$('#stage');
 

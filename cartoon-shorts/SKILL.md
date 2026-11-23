@@ -4,7 +4,7 @@ license: MIT (see LICENSE). Copyright (c) 2026 Sai Akash Neela
 metadata:
   author: Sai Akash Neela
   homepage: https://github.com/SaiAkashNeela/cartoon-short-skill
-description: Make vertical 9:16 animated "what if" / explainer Shorts (YouTube Shorts, TikTok, Reels), 20–90 s, starring a toon-shaded 3D cartoon character with a big expressive face plus any supporting cast the story needs (doctors, bosses, friends, crowds, with optional lip-synced dialogue), moving through story-matched locations (bedroom, kitchen, office, street, hospital, space, beach, field), narrated voiceover, procedural music/SFX and bold word-by-word captions — rendered entirely in code with Three.js + headless Chromium + ffmpeg (no Remotion, no AI video generation). Use this whenever the user wants a cartoon short, a faceless animated story video, a "what if you..." / "what happens when..." video, a stickman-style explainer, an animated narration with a character, or "another episode" of their cartoon series — even if they only give a topic like "do one about drinking only coffee for a week".
+description: Make animated "what if" / explainer videos starring a toon-shaded 3D cartoon character with a big expressive face, any supporting cast the story needs (doctors, bosses, friends, crowds, with optional lip-synced dialogue) and story-matched locations, rendered entirely in code with Three.js + headless Chromium + ffmpeg (no Remotion, no AI video) — vertical Shorts/TikToks/Reels up to 90 s, or landscape YouTube videos of 3–5 minutes, plus thumbnails, captions and a full YouTube publishing playbook (search-optimised titles, descriptions and tags, translations, uploads). Use this whenever the user wants a cartoon short or video, a faceless animated story, a "what if you..." / "what happens when..." video, a stickman-style explainer, "another episode" of their series, or wants such a video published or optimised on YouTube, even if they only give a topic like "do one about drinking only coffee for a week".
 ---
 
 # Cartoon Shorts
@@ -21,6 +21,8 @@ The skill lives in this folder:
   one set), `coffee-week` (five sets, props, word-anchored SFX) and `doctor` (a supporting cast, a street crowd, and two
   characters who speak with lip sync)
 - `references/episode-api.md` — **read before writing `episode.js`**: poses, face params, envs, props, cameras
+- `references/youtube.md` — publishing: formats, search-first titles/descriptions/tags, captions, chapters, 10-language
+  localisations, thumbnails, made-for-kids, quota
 - `references/voices.md` — choosing a TTS provider (connected tools, cloud APIs, local models, own recordings), recipes, voices
 - `references/cast.jpg`, `sets.jpg`, `poses.jpg`, `faces.jpg`, `outfits.jpg`, `environments.jpg` — rendered sheets of every location, pose,
   expression, outfit preset and lighting look; view them when choreographing
@@ -44,9 +46,22 @@ character's avatar, the channel name, the handle and a call-to-action, with a ch
 Only brand videos with a channel the user owns or names. The examples carry `@BobbleExplains`, which belongs to the
 author; never copy it into someone else's video. `new_project.sh` strips it from the copied example for that reason.
 
+## Format: Short or regular video
+
+Decide this first, with the user if they haven't said:
+- **Short** (`"format": "short"`, the default): vertical 1080×1920, **20–90 s**, for YouTube Shorts / TikTok / Reels.
+  One escalating idea, 4–14 lines.
+- **Regular video** (`"format": "video"`): landscape 1920×1080, **3–5 minutes**, lands in the channel's Videos tab and
+  search. It needs a real structure: hook in the first 5–10 s, 4–6 sections each starting with a labelled line (labels
+  become chapters), a re-hook every 30–45 s, a payoff and a short outro. In landscape, place cameras about 35–40 %
+  closer than the vertical examples (the frame is much wider), and use the extra width for two-shots and groups.
+  `episode.js` gets `FORMAT`, `W` and `H` in its context to adapt.
+`audio.py` warns when a Short runs past 90 s or a video is under a minute. Rendering takes about 1–4 s per frame
+per worker, so a 5-minute video (9,000 frames) is roughly 1–2 hours: run it in the background.
+
 ## The model: one shot per narrated line
 
-A video is 4–14 lines (20–90 s). Each line is one shot: the camera cuts (with a whoosh + flash + zoom punch)
+A Short is 4–14 lines (20–90 s, vertical); a regular video is roughly 25–45 lines (3–5 min, landscape). Each line is one shot: the camera cuts (with a whoosh + flash + zoom punch)
 0.3 s before the line starts. Per shot you choose **where it happens (set)**, the time of day (env), keyframe the
 character's pose and face, and give a camera move. Keyframes can be anchored to the exact moment a word is spoken (`at(line, 'word')`),
 which is what makes the comedy timing land — e.g. the character nods off exactly on "switching off".
@@ -177,18 +192,14 @@ Rendering is CPU WebGL (SwiftShader): ~1–4 s per frame per worker, so a 30 s v
 10–20 min and a 90 s video roughly 45–60 min; more people and indoor sets cost a little more per frame. Run it in the background and wait on its completion rather than polling. Afterwards spot-check a
 few frames from the MP4 (`ffmpeg -ss <t> -i final.mp4 -frames:v 1 x.jpg`) and deliver the file (SendUserFile when available).
 
-### 7. Publish (optional)
-Offer to publish only after the user has seen the video. If YouTube tools from the repo's `youtube-mcp` server (or any
-other YouTube connector) are available, prepare the metadata, show it to the user, and upload only after they approve:
-- **Title:** the hook as a question, ≤ 60 characters, one emoji at most: "What if you drank only coffee for a week? ☕".
-- **Description:** two or three short lines expanding the hook, a one-line takeaway, any fact sources, then 3–5 hashtags
-  including `#shorts`.
-- **Tags:** the topic plus "what if", "explained", "animation".
-- **Privacy:** upload **private** or with a `publish_at` schedule unless the user explicitly says public now. Unaudited API
-  projects can only upload private videos anyway (see `youtube-mcp/README.md`).
-- After uploading, add the video to the series playlist if one exists.
-
-Without such tools, give the user the title, description and tags to paste into YouTube Studio.
+### 7. Thumbnail, captions, publish (optional)
+- `python3 $SKILL/scripts/captions.py <proj>` → `captions.srt` (and `chapters.txt` for regular videos).
+- `python3 $SKILL/scripts/thumbnail.py <proj> --time <s> --text "2–4|WORDS"` → 1280×720 thumbnail from a clean frame
+  (mainly for regular videos; the Shorts feed uses a frame picked in the YouTube app).
+- If a YouTube tool is available (a YouTube connector, or this repo's `youtube-mcp`), follow `references/youtube.md`:
+  draft the search-first title, description and tags, show them to the user, then upload **private**, add captions,
+  translations in 10 languages, the thumbnail and the playlist. The user makes it public. Without such tools, hand the user
+  the metadata, `captions.srt`, `chapters.txt` and the thumbnail to add in YouTube Studio.
 
 ## Gotchas
 - `episode.js` must return exactly as many shots as `script.json` has lines; the page logs an error otherwise.

@@ -91,7 +91,13 @@ for f in range(nf):
 mouth = np.array(mouth); ref = np.percentile(mouth[mouth > 0.01], 90) if (mouth > 0.01).any() else 1.0
 mouth = [round(float(x), 3) for x in np.where(mouth / ref < 0.1, 0, np.clip(mouth / ref, 0, 1))]
 
-json.dump({'fps': FPS, 'duration': round(total, 3), 'starts': [round(s, 3) for s in starts],
+fmt = script.get('format', 'short')
+if fmt == 'short' and total > 90.5:
+    print(f'WARNING: {total:.1f}s is over the 90 s Shorts limit used by this skill; trim lines or use SPEED, or make it "format": "video"')
+if fmt == 'video' and total < 60:
+    print(f'NOTE: {total:.1f}s is short for a regular video (aim for 3-5 min); consider "format": "short"')
+
+json.dump({'fps': FPS, 'format': fmt, 'duration': round(total, 3), 'starts': [round(s, 3) for s in starts],
            'lineEnds': [round(e, 3) for e in ends], 'lines': lines, 'labels': labels, 'moods': moods,
            'words': words_out, 'speakers': speakers if any(speakers) else None,
            'speakerNames': {k: v.get('name', k) for k, v in cast_meta.items()} or None, 'mouth': mouth, 'brand': {k: brand[k] for k in ('handle', 'name', 'cta') if brand.get(k)} or None,

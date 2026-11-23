@@ -31,6 +31,10 @@ street crowd.
 
 ## What you can make it do
 
+**Shorts or full videos.** `"format": "short"` renders vertical 1080×1920 Shorts/TikToks/Reels up to 90 s;
+`"format": "video"` renders landscape 1920×1080 YouTube videos of 3–5 minutes with chapters. `scripts/thumbnail.py`
+makes 1280×720 thumbnails from a clean frame, and `scripts/captions.py` writes caption files (and chapters).
+
 **A whole cast.** Bobble can share the screen with anyone the story needs: doctors, bosses, kids, crowds. Each
 person is one line of looks (hair, hats, glasses, lab coat, tie, height), and characters can speak their own lines in
 their own voice, with lip sync and a name tag:
@@ -68,7 +72,10 @@ character's own face. Leave it out for an unbranded video.
 ## Publish straight to YouTube (optional)
 
 `youtube-mcp/` is an MCP server for your own channel: upload Shorts, schedule them, edit metadata, manage playlists,
-reply to comments, read analytics and set the banner, all from Claude. It runs locally with your own Google OAuth
+reply to comments, read analytics and set the banner, all from Claude. The skill's publishing playbook
+([`references/youtube.md`](cartoon-shorts/references/youtube.md)) covers search-first titles, descriptions and tags,
+captions, chapters, translations into 10 languages, thumbnails and the made-for-kids question, and works with any
+YouTube connector. It runs locally with your own Google OAuth
 client; setup takes about 10 minutes and is in [`youtube-mcp/README.md`](youtube-mcp/README.md).
 
 ## Install
@@ -109,8 +116,10 @@ cartoon-shorts/
   engine/sets.js               the other locations: bedroom, kitchen, office, hospital, street, space, beach
   engine/render.mjs            headless Chromium frame capture -> ffmpeg
   engine/audio.py              word timings + procedural music/SFX mix
-  scripts/                     new_project, voice_lines (any TTS), tts_piper, prep_voice, stills, render_all
+  scripts/                     new_project, voice_lines (any TTS), tts_piper, prep_voice, stills, render_all,
+                               captions (SRT + chapters), thumbnail
   references/episode-api.md    poses, face params, environments, cameras
+  references/youtube.md        publishing playbook: SEO, captions, translations, thumbnails
   references/voices.md         choosing a TTS: connectors, cloud APIs, local models, recordings
   examples/stopped-sleeping/   complete example episode
   examples/coffee-week/        second example: props (mug, cup pyramid) + SFX cues

@@ -1,0 +1,13 @@
+{
+  "title": "What if you stopped sleeping?",
+  "voice": { "provider": "cartesia", "voice_id": "23112795-d54e-4560-9568-791a87c30201", "name": "Darius (Engaging Narrator)" },
+  "lines": [
+    { "text": "What if you just... stopped sleeping?", "mood": "bright", "emotion": "curious" },
+    { "text": "Day one. You feel totally fine. Kind of proud, actually.", "label": "DAY 1", "mood": "bright", "emotion": "content" },
+    { "text": "Day three. Your brain starts switching off for seconds at a time. Without asking you.", "label": "DAY 3", "mood": "bright", "emotion": "neutral" },
+    { "text": "Day five. You start seeing things that aren't there.", "label": "DAY 5", "mood": "eerie", "emotion": "mysterious" },
+    { "text": "Because here's the thing. Your body always wins. Sleep is not optional.", "mood": "calm", "emotion": "calm" }
+  ],
+  "tail": 2.6,
+  "sfx": [ { "type": "thud", "line": 4, "at": "end", "offset": 0.7 } ]
+}

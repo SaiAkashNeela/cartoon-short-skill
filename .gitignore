@@ -1,0 +1,9 @@
+node_modules/
+*.mp4
+vo_raw/
+vo/
+stills/
+audio.wav
+timeline.json
+chunk*
+__pycache__/

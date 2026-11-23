@@ -8,6 +8,7 @@
 | `logo_wordmark_on_dark.png`, `logo_wordmark_on_light.png` | the same on solid backgrounds |
 | `youtube_banner.png` (2560×1440) | YouTube channel banner: logo inside the 1546×423 all-device safe area, cast visible on desktop and TV |
 | `youtube_banner_preview.png` | the banner with the device crop areas marked |
+| `watermark.png` (300×300) | round Bobble badge used as the YouTube subscribe watermark |
 
 Bobble and the *Bobble Explains* name and artwork belong to Sai Akash Neela. The code that makes them is MIT; please
 brand your own channel with your own character and name.

@@ -1,1 +1,6 @@
 node_modules/
+
+# credentials live in ~/.config/youtube-studio-mcp, but never commit them if copied here
+client_secret*.json
+token*.json
+.env

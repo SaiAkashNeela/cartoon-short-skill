@@ -7,3 +7,12 @@ audio.wav
 timeline.json
 chunk*
 __pycache__/
+
+# never commit credentials
+client_secret*.json
+token*.json
+*credentials*.json
+.env
+.env.*
+*.pem
+*.key

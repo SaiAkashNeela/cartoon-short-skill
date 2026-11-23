@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: MIT — Copyright (c) 2026 Sai Akash Neela — https://github.com/SaiAkashNeela/cartoon-short-skill
 # Free offline fallback voice (Piper). Writes vo_raw/<i>.wav for every line in script.json.
 # Usage: tts_piper.sh <project_dir> [voice]   voice default: en_US-ryan-high
 set -euo pipefail

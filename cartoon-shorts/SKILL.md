@@ -1,5 +1,9 @@
 ---
 name: cartoon-shorts
+license: MIT (see LICENSE). Copyright (c) 2026 Sai Akash Neela
+metadata:
+  author: Sai Akash Neela
+  homepage: https://github.com/SaiAkashNeela/cartoon-short-skill
 description: Make vertical 9:16 animated "what if" / explainer Shorts (YouTube Shorts, TikTok, Reels) starring a toon-shaded 3D cartoon character with a big expressive face, narrated voiceover, procedural music/SFX and bold word-by-word captions — rendered entirely in code with Three.js + headless Chromium + ffmpeg (no Remotion, no AI video generation). Use this whenever the user wants a cartoon short, a faceless animated story video, a "what if you..." / "what happens when..." video, a stickman-style explainer, an animated narration with a character, or "another episode" of their cartoon series — even if they only give a topic like "do one about drinking only coffee for a week".
 ---
 
@@ -19,13 +23,24 @@ The skill lives in this folder:
 - `references/voices.md` — Cartesia voice details and the free Piper fallback
 - `references/poses.jpg`, `faces.jpg`, `outfits.jpg`, `environments.jpg` — rendered sheets of every pose, expression, outfit preset and lighting look; view them when choreographing
 
-## The character: Beanie, star of "Beanie Explains"
+## The character: Beanie
 
-The default character is **Beanie**: round white head, yellow beanie, blue hoodie (the `Classic` look). He is the
-recurring star of the user's channel **Beanie Explains**, so every episode uses the Classic outfit and the same narrator
-voice (Darius) unless the user asks otherwise. Viewers recognise a series by its character in the first half-second, and
-consistency matters more than variety here. The narration talks *about* "you"; Beanie is the one acting it out. Other
-outfits in `references/outfits.jpg` are for side characters or a different series.
+The default character is **Beanie**: round white head, yellow beanie, blue hoodie (the `Classic` look), created by
+Sai Akash Neela as the mascot of the **Beanie Explains** channel. A series is recognised by its character in the first
+half-second, so keep one character, one outfit and one narrator voice across a user's episodes. Use Beanie as-is, or
+give a user's own series its own look (`export const character = {...}`, presets in `references/outfits.jpg`).
+The narration talks *about* "you"; the character acts it out.
+
+## Branding: watermark and end card
+
+Add a `brand` block to `script.json` to stamp the user's channel on the video:
+```json
+"brand": { "handle": "@TheirHandle", "name": "Their Channel", "cta": "Follow for more what-ifs", "endCard": 2.4 }
+```
+`handle` adds a small watermark in the top-right safe zone. `endCard` (seconds) appends an end card after the tail: the
+character's avatar, the channel name, the handle and a call-to-action, with a chime. Leave out `brand` for no branding.
+Only brand videos with a channel the user owns or names. The examples carry `@BeanieExplains`, which belongs to the
+author; never copy it into someone else's video. `new_project.sh` strips it from the copied example for that reason.
 
 ## The model: one shot per narrated line
 
@@ -39,7 +54,7 @@ expression keyframes, not lip-synced to the voice. Keep it that way unless the u
 
 ## Workflow
 
-Use a project directory outside any git repo the user cares about (e.g. the scratchpad). `$SKILL` below is this folder.
+Use a project directory outside any git repo the user cares about (e.g. a temp or scratch directory). `$SKILL` below is this folder.
 
 ### 1. Write the script → `script.json`
 Good Shorts scripts are short and visual:
@@ -108,4 +123,4 @@ few frames from the MP4 (`ffmpeg -ss <t> -i final.mp4 -frames:v 1 x.jpg`) and de
 - Poses blend with smoothstep between keyframes; a "snap" (jolt, flinch) is just two keyframes ~0.15–0.2 s apart.
 - When the character turns (`ry`), the face turns with the head — for walks use `ry: ±1.2` (three-quarter) so the face stays readable.
 - Captions use the system font Inter (weight 800); if it's missing the browser falls back to a generic sans.
-- Keep Beanie in the Classic look (`export const character = {}`); for other series design your own outfit — don't recreate another channel's mascot.
+- Keep a series' character consistent; when designing new ones, make them original. Don't recreate another channel's mascot.

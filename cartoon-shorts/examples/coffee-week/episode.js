@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT — Copyright (c) 2026 Sai Akash Neela — https://github.com/SaiAkashNeela/cartoon-short-skill
 // "What if you drank only coffee for a week?" — one shot per script line.
 export const character = {};  // Beanie, in his Classic look: the same character every episode of Beanie Explains
 

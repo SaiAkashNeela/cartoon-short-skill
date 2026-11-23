@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: MIT — Copyright (c) 2026 Sai Akash Neela — https://github.com/SaiAkashNeela/cartoon-short-skill
 # Render every frame in parallel chunks, concatenate, and mux with audio.wav.
 # Usage: render_all.sh <project_dir> [out.mp4] [workers]
 # Takes ~1-4 s/frame per worker on CPU (SwiftShader); run it in the background for long videos.

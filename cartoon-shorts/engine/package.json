@@ -2,6 +2,8 @@
   "name": "cartoon-short-project",
   "private": true,
   "type": "module",
+  "license": "MIT",
+  "author": "Sai Akash Neela",
   "dependencies": {
     "three": "0.170.0"
   }

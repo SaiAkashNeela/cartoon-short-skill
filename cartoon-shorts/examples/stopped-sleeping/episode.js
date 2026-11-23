@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT — Copyright (c) 2026 Sai Akash Neela — https://github.com/SaiAkashNeela/cartoon-short-skill
 // "What if you stopped sleeping?" — one shot per script line.
 // ctx: TL, S (line starts), E (line ends), CUT (shot starts), D (shot durations), at(line, word) -> shot-relative time,
 //      wt(line, word) -> absolute time, dolly(u, dur, p0, p1, look), POSE(name, overrides), fx helpers, smooth/lerp/clamp.

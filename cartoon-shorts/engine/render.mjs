@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT — Copyright (c) 2026 Sai Akash Neela — https://github.com/SaiAkashNeela/cartoon-short-skill
 // Renders scene.html frame-by-frame in headless Chromium (SwiftShader WebGL) and pipes JPEGs to ffmpeg.
 // Usage (from the project dir):
 //   node render.mjs stills 1.0 4.2 ...        -> stills/t_<time>.jpg

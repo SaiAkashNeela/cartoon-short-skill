@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: MIT — Copyright (c) 2026 Sai Akash Neela — https://github.com/SaiAkashNeela/cartoon-short-skill
 # Trim leading/trailing silence from vo_raw/<i>.wav (any format ffmpeg reads) into vo/<i>.wav (mono 44.1k s16).
 # Usage: [SPEED=1.08] prep_voice.sh <project_dir>   (SPEED speeds narration up without changing pitch)
 set -euo pipefail

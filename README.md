@@ -39,6 +39,11 @@ props: a mug that follows the hand and a cup pyramid that builds as the narratio
 These sheets are rendered by the engine itself: `python3 docs/gallery/build_gallery.py [sleep.mp4] [coffee.mp4]`
 regenerates them, and the episode frames and GIF come from the optional MP4.
 
+**Branding.** Add a `brand` block to `script.json` for a channel watermark and an end card, built from the
+character's own face. Leave it out for an unbranded video.
+
+<p align="center"><img src="docs/images/endcard.jpg" width="300" alt="End card: Beanie avatar, BEANIE EXPLAINS, @BeanieExplains, Follow for more what-ifs"></p>
+
 ## Install
 
 Copy the `cartoon-shorts/` folder into a skills directory, e.g. `~/.claude/skills/cartoon-shorts/`, or into a
@@ -67,6 +72,7 @@ $S/scripts/render_all.sh ~/my-short final.mp4  # full render
 ```
 cartoon-shorts/
   SKILL.md                     workflow Claude follows
+  LICENSE                      MIT (copy shipped with the skill)
   engine/scene.html            Three.js renderer: set, character rig, procedural face, lighting, captions
   engine/render.mjs            headless Chromium frame capture -> ffmpeg
   engine/audio.py              word timings + procedural music/SFX mix
@@ -80,3 +86,33 @@ docs/
   images/                      README gallery
   gallery/build_gallery.py     regenerates the gallery from the engine
 ```
+
+## Credits
+
+Created by **Sai Akash Neela** ([@SaiAkashNeela](https://github.com/SaiAkashNeela), [saiakashneela.com](https://www.saiakashneela.com)).
+Beanie and the *Beanie Explains* name belong to the author. You're welcome to use the engine, and the Beanie design under
+the MIT licence, but please brand your own channel with your own name and handle.
+
+Contributions are welcome: open an issue or a pull request. New poses, props, sets and environments are especially welcome.
+Run `python3 docs/gallery/build_gallery.py` after engine changes so the README sheets stay accurate.
+
+## License
+
+[MIT](LICENSE) © 2026 Sai Akash Neela.
+
+### Third-party software and content
+
+Nothing third-party is vendored in this repository; these are fetched or used at run time under their own licences:
+
+| Component | Licence | How it's used |
+|---|---|---|
+| [three.js](https://github.com/mrdoob/three.js) | MIT | npm dependency of the render project |
+| [Playwright](https://github.com/microsoft/playwright) / Chromium | Apache-2.0 / BSD-style | headless frame capture |
+| [FFmpeg](https://ffmpeg.org) | LGPL/GPL (depends on your build) | encoding, run as an external program |
+| [Inter](https://github.com/rsms/inter) font | SIL OFL 1.1 | system font for captions, not bundled |
+| [Piper](https://github.com/rhasspy/piper) TTS | MIT | optional offline voice; each **voice model has its own licence**, so check the model card before publishing |
+| [Cartesia](https://cartesia.ai) voices | Cartesia's terms | optional hosted voice; generated audio is subject to your Cartesia plan's terms |
+
+All music and sound effects are synthesized from scratch by `engine/audio.py`, so the output contains no third-party audio.
+You're responsible for the scripts and facts in videos you publish.
+

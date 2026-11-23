@@ -91,5 +91,11 @@
    "at": "start",
    "offset": 4.9
   }
- ]
+ ],
+ "brand": {
+  "handle": "@BeanieExplains",
+  "name": "Beanie Explains",
+  "cta": "Follow for more what-ifs",
+  "endCard": 2.4
+ }
 }

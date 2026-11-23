@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- SPDX-License-Identifier: MIT — Copyright (c) 2026 Sai Akash Neela — https://github.com/SaiAkashNeela/cartoon-short-skill -->
 <html>
 <head>
 <meta charset="utf-8">
@@ -20,6 +21,21 @@
     letter-spacing: 4px; paint-order: stroke fill; -webkit-text-stroke: 24px #0d0d10;
     text-shadow: 0 10px 0 #0d0d10; opacity: 0; }
   #flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+  /* branding (only shown when script.json has a "brand" block). Kept out of the Shorts/TikTok UI zones:
+     top bar (y < 330), right-hand buttons (x > 820, y > 900) and bottom description (y > 1500). */
+  #wm { position: absolute; right: 40px; top: 500px; font-family: 'Inter', sans-serif; font-weight: 800; font-size: 34px;
+    color: #fff; opacity: 0; paint-order: stroke fill; -webkit-text-stroke: 7px rgba(13,13,16,0.85); letter-spacing: 0.5px; }
+  #wm i { display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: #ffd93b; margin-right: 10px;
+    vertical-align: 3px; box-shadow: 0 0 0 3px rgba(13,13,16,0.85); }
+  #end { position: absolute; inset: 0; opacity: 0; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding-bottom: 140px; font-family: 'Inter', sans-serif;
+    background: radial-gradient(ellipse at 50% 45%, rgba(12,10,24,0.82) 0%, rgba(12,10,24,0.95) 70%); }
+  #end canvas { width: 320px; height: 320px; }
+  #end .name { font-weight: 800; font-size: 112px; line-height: 1.0; color: #ffd93b; text-align: center; margin-top: 26px;
+    paint-order: stroke fill; -webkit-text-stroke: 20px #0d0d10; text-shadow: 0 9px 0 #0d0d10; padding: 0 40px; }
+  #end .handle { font-weight: 800; font-size: 50px; color: #fff; margin-top: 18px; paint-order: stroke fill; -webkit-text-stroke: 9px #0d0d10; }
+  #end .cta { margin-top: 46px; font-weight: 800; font-size: 44px; color: #15131a; background: #ffd93b; padding: 22px 46px;
+    border-radius: 999px; border: 7px solid #0d0d10; box-shadow: 0 9px 0 #0d0d10; letter-spacing: 1px; }
 </style>
 <script type="importmap">{ "imports": { "three": "./node_modules/three/build/three.module.js" } }</script>
 </head>
@@ -28,6 +44,8 @@
   <div id="vignette"></div>
   <div id="day"></div>
   <div id="cap"></div>
+  <div id="wm"></div>
+  <div id="end"><canvas width="320" height="320"></canvas><div class="name"></div><div class="handle"></div><div class="cta"></div></div>
   <div id="flash"></div>
 </div>
 <script type="module">
@@ -577,6 +595,40 @@ function updateCaptions(t) {
 }
 function shotAt(t) { let s = 0; for (let i = 0; i < CUT.length; i++) if (t >= CUT[i]) s = i; return s; }
 
+// ---------- branding: watermark + end card (driven by script.json "brand", see audio.py) ----------
+const BRAND = TL.brand || {}, ENDCARD = TL.endCard || null;
+const wmEl = document.getElementById('wm'), endEl = document.getElementById('end');
+if (BRAND.handle) wmEl.innerHTML = '<i></i>' + BRAND.handle.replace(/[<>&]/g, '');
+if (ENDCARD) {
+  endEl.querySelector('.name').textContent = (BRAND.name || '').toUpperCase();
+  endEl.querySelector('.handle').textContent = BRAND.handle || '';
+  endEl.querySelector('.cta').textContent = (BRAND.cta || 'Follow for more').toUpperCase();
+  if (!BRAND.cta && !BRAND.handle) endEl.querySelector('.cta').style.display = 'none';
+  // avatar: the character's own face, drawn flat inside a circle with the beanie on top
+  drawFace(Object.assign({}, FACE0, { smile: 0.9, mouthW: 1.05, blush: 0.5 }));
+  const av = endEl.querySelector('canvas').getContext('2d'), cx = 160, cy = 172, R = 130;
+  av.save(); av.beginPath(); av.arc(cx, cy, R, 0, Math.PI * 2); av.clip();
+  av.fillStyle = LOOK.skin; av.fillRect(0, 0, 320, 320);
+  av.drawImage(faceCanvas, cx - R * 1.12, cy - R * 1.02, R * 2.24, R * 2.24);
+  av.fillStyle = LOOK.beanie; av.fillRect(0, 0, 320, cy - R * 0.42);
+  av.fillStyle = LOOK.beanieBand; av.fillRect(0, cy - R * 0.62, 320, R * 0.22);
+  av.restore();
+  av.lineWidth = 9; av.strokeStyle = '#141218'; av.beginPath(); av.arc(cx, cy, R, 0, Math.PI * 2); av.stroke();
+  av.beginPath(); av.moveTo(cx - R * 0.93, cy - R * 0.4); av.lineTo(cx + R * 0.93, cy - R * 0.4); av.lineWidth = 6; av.stroke();
+  av.fillStyle = LOOK.beanie; av.beginPath(); av.arc(cx, cy - R - 6, 24, 0, Math.PI * 2); av.fill(); av.lineWidth = 7; av.stroke();
+}
+function updateBranding(t) {
+  const inEnd = ENDCARD && t >= ENDCARD.start;
+  wmEl.style.opacity = BRAND.handle && !inEnd ? 0.62 : 0;
+  if (!ENDCARD) return;
+  const u = t - ENDCARD.start, pop = (d) => easeOutBack(clamp((u - d) / 0.4));
+  endEl.style.opacity = clamp(u / 0.3);
+  endEl.querySelector('canvas').style.transform = `scale(${Math.max(0.01, pop(0.05))}) rotate(${(1 - clamp((u - 0.05) / 0.4)) * -25}deg)`;
+  endEl.querySelector('.name').style.transform = `scale(${Math.max(0.01, pop(0.2))})`;
+  endEl.querySelector('.handle').style.opacity = clamp((u - 0.4) / 0.25);
+  endEl.querySelector('.cta').style.transform = `scale(${Math.max(0.01, pop(0.55)) * (1 + 0.04 * Math.sin(u * 8) * clamp(u - 1))})`;
+}
+
 // ---------- per-frame ----------
 const tmpV = new THREE.Vector3();
 function applyPose(p) {
@@ -645,6 +697,7 @@ window.setTime = function (t) {
 
   flashEl.style.opacity = punch ? 0.35 * (1 - smooth(0, 0.12, u)) : 0;
   updateCaptions(t);
+  updateBranding(t);
   renderer.render(scene, camera);
 };
 await document.fonts.load('800 100px Inter');

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT — Copyright (c) 2026 Sai Akash Neela — https://github.com/SaiAkashNeela/cartoon-short-skill
 """Render the reference sheets in docs/images/ straight from the engine.
 
     python3 docs/gallery/build_gallery.py            (from the repo root; needs node, ffmpeg, playwright, PIL)

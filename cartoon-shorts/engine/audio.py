@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT — Copyright (c) 2026 Sai Akash Neela — https://github.com/SaiAkashNeela/cartoon-short-skill
 """Build timeline.json (word timings, labels) and audio.wav (voice + procedural music + SFX).
 
 Reads  script.json  and the trimmed voice lines vo/0.wav, vo/1.wav, ... (one per script line).
@@ -35,7 +36,10 @@ starts, t = [], 0.0
 for i, v in enumerate(voices):
     t += GAP[i]; starts.append(t); t += len(v) / SR
 ends = [s + len(v) / SR for s, v in zip(starts, voices)]
-total = t + script.get('tail', 2.6)
+brand = script.get('brand') or {}
+end_secs = float(brand.get('endCard', 0) or 0)   # optional end card appended after the tail
+end_start = t + script.get('tail', 2.6)
+total = end_start + end_secs
 N = int(total * SR)
 voice = np.zeros(N, np.float32)
 for s, v in zip(starts, voices):
@@ -78,7 +82,9 @@ for li, (text, v, s0) in enumerate(zip(lines, voices, starts)):
 
 json.dump({'fps': FPS, 'duration': round(total, 3), 'starts': [round(s, 3) for s in starts],
            'lineEnds': [round(e, 3) for e in ends], 'lines': lines, 'labels': labels, 'moods': moods,
-           'words': words_out}, open('timeline.json', 'w'), indent=1)
+           'words': words_out, 'brand': {k: brand[k] for k in ('handle', 'name', 'cta') if brand.get(k)} or None,
+           'endCard': {'start': round(end_start, 3), 'seconds': end_secs} if end_secs else None},
+          open('timeline.json', 'w'), indent=1)
 
 
 # ---- procedural music: chord pad + pluck arpeggio (+ soft drums when bright) ----
@@ -153,6 +159,7 @@ for i in range(1, len(lines)):  # whoosh into every cut, pop when a label appear
     add(starts[i] - 0.45, whoosh())
     if labels[i]: add(starts[i] - 0.05, pop())
 if labels[0]: add(starts[0] - 0.05, pop())
+if end_secs: add(end_start, ding())
 for c in script.get('sfx', []):
     base = starts[c['line']] if c.get('at', 'start') == 'start' else ends[c['line']]
     add(base + c.get('offset', 0), SFX[c['type']]())

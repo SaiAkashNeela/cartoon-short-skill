@@ -36,9 +36,11 @@ action. In landscape, cameras can sit about 35–40 % closer than in the vertica
 - Upload **private** (or scheduled with `publish_at`), never public directly; the user flips it public. Projects that
   haven't passed YouTube's API audit can only upload private anyway.
 - Remote (hosted) connectors fetch the file from a **public https URL**, not from this machine. If the user has no hosting,
-  one option is to push the MP4s to a temporary branch of a repo they own, upload from the raw URL, then remove the
-  files and delete the branch. Tell the user first, because the file is publicly reachable while the branch exists. A local
-  `youtube-mcp` server takes a file path instead.
+  one option is `scripts/host_tmp.sh put <owner/repo> <branch> <file>`: it force-pushes the file as a single orphan commit
+  on a dedicated branch of a public repo the user owns and prints a raw URL. Upload from it, then run
+  `host_tmp.sh reset <owner/repo> <branch>` straight away, which replaces the branch with a README-only commit so the video
+  never stays in the repo's history. Ask the user first: the file is public while it is up, and it force-pushes that
+  branch. A local `youtube-mcp` server takes a file path instead.
 - Put each upload in the series playlist (`playlist_id`) and check `processingDetails` afterwards for rejection reasons.
 - Never write OAuth secrets, tokens or API keys into the repo or the chat.
 

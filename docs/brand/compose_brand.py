@@ -35,8 +35,10 @@ def radial(size, inner, outer):
     return Image.fromarray(c.astype(np.uint8), 'RGB').convert('RGBA')
 
 def shadow(img, blur=18, off=(0, 16), op=110):
-    sh = Image.new('RGBA', img.size, (0, 0, 0, 0)); a = img.split()[3].point(lambda v: v * op // 255)
-    sh.putalpha(a); sh = sh.filter(ImageFilter.GaussianBlur(blur)); return sh, off
+    P = blur * 3  # padded so the blur isn't clipped into a visible box; the offset compensates
+    sh = Image.new('RGBA', (img.width + 2 * P, img.height + 2 * P), (0, 0, 0, 0)); a = Image.new('L', sh.size, 0)
+    a.paste(img.split()[3].point(lambda v: v * op // 255), (P, P)); sh.putalpha(a); sh = sh.filter(ImageFilter.GaussianBlur(blur))
+    return sh, (off[0] - P, off[1] - P)
 
 def icon(cut, name, inner, outer, ray, S=1024, head_w=0.62):
     bg = radial(S, inner, outer); bg.alpha_composite(rays(S, inner, ray))

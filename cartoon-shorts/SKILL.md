@@ -177,6 +177,19 @@ Rendering is CPU WebGL (SwiftShader): ~1–4 s per frame per worker, so a 30 s v
 10–20 min and a 90 s video roughly 45–60 min; more people and indoor sets cost a little more per frame. Run it in the background and wait on its completion rather than polling. Afterwards spot-check a
 few frames from the MP4 (`ffmpeg -ss <t> -i final.mp4 -frames:v 1 x.jpg`) and deliver the file (SendUserFile when available).
 
+### 7. Publish (optional)
+Offer to publish only after the user has seen the video. If YouTube tools from the repo's `youtube-mcp` server (or any
+other YouTube connector) are available, prepare the metadata, show it to the user, and upload only after they approve:
+- **Title:** the hook as a question, ≤ 60 characters, one emoji at most: "What if you drank only coffee for a week? ☕".
+- **Description:** two or three short lines expanding the hook, a one-line takeaway, any fact sources, then 3–5 hashtags
+  including `#shorts`.
+- **Tags:** the topic plus "what if", "explained", "animation".
+- **Privacy:** upload **private** or with a `publish_at` schedule unless the user explicitly says public now. Unaudited API
+  projects can only upload private videos anyway (see `youtube-mcp/README.md`).
+- After uploading, add the video to the series playlist if one exists.
+
+Without such tools, give the user the title, description and tags to paste into YouTube Studio.
+
 ## Gotchas
 - `episode.js` must return exactly as many shots as `script.json` has lines; the page logs an error otherwise.
 - Changing the script or voice changes all timings: re-run `prep_voice.sh` + `audio.py`, and prefer word anchors over

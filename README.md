@@ -65,6 +65,12 @@ character's own face. Leave it out for an unbranded video.
 
 <p align="center"><img src="docs/images/endcard.jpg" width="300" alt="End card: Bobble avatar, BEANIE EXPLAINS, @BobbleExplains, Follow for more what-ifs"></p>
 
+## Publish straight to YouTube (optional)
+
+`youtube-mcp/` is an MCP server for your own channel: upload Shorts, schedule them, edit metadata, manage playlists,
+reply to comments, read analytics and set the banner, all from Claude. It runs locally with your own Google OAuth
+client; setup takes about 10 minutes and is in [`youtube-mcp/README.md`](youtube-mcp/README.md).
+
 ## Install
 
 Copy the `cartoon-shorts/` folder into a skills directory, e.g. `~/.claude/skills/cartoon-shorts/`, or into a
@@ -110,7 +116,9 @@ cartoon-shorts/
   examples/coffee-week/        second example: props (mug, cup pyramid) + SFX cues
   examples/doctor/             third example: supporting cast, crowd, lip-synced dialogue
   references/*.jpg             set / pose / expression / outfit / lighting sheets (for Claude to look at)
+youtube-mcp/                   MCP server for your YouTube channel (uploads, metadata, comments, analytics)
 docs/
+  brand/                       Bobble Explains icons, wordmark, banner (and the scripts that make them)
   images/                      README gallery
   gallery/build_gallery.py     regenerates the gallery from the engine
 ```
@@ -141,6 +149,7 @@ Nothing third-party is vendored in this repository; these are fetched or used at
 | [Piper](https://github.com/rhasspy/piper) TTS | MIT | optional offline voice; each **voice model has its own licence**, so check the model card before publishing |
 | Your TTS provider (e.g. [Cartesia](https://cartesia.ai), ElevenLabs, OpenAI, Azure, Google, Polly, Deepgram) | the provider's terms | optional hosted voices; generated audio is subject to your plan's terms. The example episodes were voiced with Cartesia |
 | [Kokoro](https://github.com/hexgrad/kokoro) | Apache-2.0 | optional local voice |
+| [MCP SDK](https://github.com/modelcontextprotocol/typescript-sdk), [googleapis](https://github.com/googleapis/google-api-nodejs-client) | MIT, Apache-2.0 | `youtube-mcp` dependencies (installed by npm) |
 
 All music and sound effects are synthesized from scratch by `engine/audio.py`, so the output contains no third-party audio.
 You're responsible for the scripts and facts in videos you publish.

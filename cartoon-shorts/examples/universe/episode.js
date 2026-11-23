@@ -136,7 +136,7 @@ export default function episode({ D, at, POSE, fx, smooth, lerp, clamp, COSMOS: 
         cam: orbit(11, VOY, 13, 2, 0.6, -0.3)
       }),
       space({ // 12 one light-day away — pull way back
-        update: ({ u, props }) => { props.labels = [{ pos: up(VOY, 2.4 + u * 1.5), text: 'VOYAGER 1' }]; fact(props, u, oneDay, '1 light-day', '≈ 26 billion km from Earth'); },
+        update: ({ u, props }) => { props.labels = [{ pos: up(VOY, 2.4), text: 'VOYAGER 1' }]; fact(props, u, oneDay, '1 light-day', '≈ 26 billion km from Earth'); },
         cam: glide(12, [5, 3, -14988], [80, 40, -14880], VOY)
       }),
 

@@ -1,6 +1,6 @@
 # cartoon-short-skill
 
-A Claude skill that makes **Beanie Explains**: it turns a topic into a finished vertical (1080×1920) animated Short starring
+A Claude skill that makes **Beanie Explains**: it turns a topic into a finished vertical (1080×1920) animated Short (20–90 s) starring
 **Beanie** (yellow beanie, blue hoodie). You get a toon-shaded 3D world,
 Beanie with a fully expressive face, a narrator voice, procedural music and SFX, and word-by-word captions. It's all
 rendered in code with **Three.js + headless Chromium + ffmpeg**: no Remotion and no AI video generation.
@@ -20,6 +20,12 @@ follows the hand and a cup pyramid that builds as the narration says "twelve cup
 ![Frames from the coffee episode](docs/images/episode-coffee.jpg)
 
 ## What you can make it do
+
+**A whole cast.** Beanie can share the screen with anyone the story needs: doctors, bosses, kids, crowds. Each
+person is one line of looks (hair, hats, glasses, lab coat, tie, height), and characters can speak their own lines in
+their own voice, with lip sync and a name tag:
+
+![Cast](docs/images/cast.jpg)
 
 **8 locations.** Each shot picks where it happens, and the time of day changes the light, the windows and the lamps:
 

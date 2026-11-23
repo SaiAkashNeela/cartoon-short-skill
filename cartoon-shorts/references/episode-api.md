@@ -20,7 +20,7 @@ export default function episode({ TL, S, E, CUT, D, at, wt, dolly, POSE, fx, smo
 1. Context object
 2. Shot fields
 3. Poses
-4. Face parameters
+4. Face parameters, 4b. Cast (more people)
 5. Environments (lighting), 5a. Sets (locations), 5b. Outfits
 6. Effects (`fx`) and props
 7. Cameras and the set layout
@@ -100,7 +100,7 @@ Raw parameters (radians) for custom poses or overrides — "A" limbs are on scre
 | `lHx`/`rHx`, `lK`/`rK` | hip swing (negative = leg forward), knee bend (positive) |
 | `fall` | 0 standing → 1 lying on back (pivots at the feet) |
 
-## 4. Face parameters
+## 4. Face parameters, 4b. Cast (more people)
 
 `references/faces.jpg` shows 12 ready-made expressions with their parameters.
 
@@ -128,6 +128,42 @@ curious `{browA:-24, brow:.1, smile:.1, mouthW:.7}` · asleep `{eyeOpen:0, smile
 
 `env` per shot: `day`, `morning` (warm, bright), `golden` (late afternoon), `dusk` (purple/pink, a few stars),
 `night` (dark blue, stars, moon), `storm` (grey, flat). Changing env between shots is the cheapest way to show time passing.
+
+## 4b. Cast (more people)
+
+```js
+export const cast = {
+  doctor: { coat: '#ffffff', hoodie: '#4a7fc1', hat: 'hair', hair: '#2b1d14', glasses: true },
+  nurse:  { coat: '#7fc8c0', hoodie: '#5aa9a0', hat: 'bun', hair: '#5a3a22', lashes: true },
+  boss:   { top: 'shirt', hoodie: '#f4f1ea', hoodieDark: '#d9d4c8', tie: '#e2493b', hat: 'none', mustache: true, hair: '#4a4a52', height: 1.06 },
+  kid:    { hat: 'cap', beanie: '#e2493b', beanieBand: '#ffffff', hoodie: '#f4c430', hoodieDark: '#e0a91c', height: 0.72 },
+  ...Object.fromEntries([...Array(8)].map((_, i) => ['p' + i, { random: i + 3 }]))   // a crowd of 8 varied people
+};
+```
+Look fields (anything left out falls back to Beanie's): `hoodie`/`hoodieDark` (top colours), `top: 'hoodie' | 'shirt'`,
+`coat` (colour of a long lab coat or scrubs worn over the top), `tie` (colour), `hat: 'beanie' | 'cap' | 'hair' | 'longHair' | 'bun' | 'none'`
+(`beanie`/`beanieBand` colour hats and caps; `hair` colours hair styles and moustaches), `glasses`, `mustache`, `lashes`,
+`skin`, `legs`, `shoe`, `sole`, `height` (1 = Beanie, 0.7 = a kid). `{ random: seed, ...overrides }` makes a varied
+person for crowds. `references/cast.jpg` shows examples. The name `hero` is reserved for the main character.
+
+Per shot, add people with `cast`. Anyone not listed is off-screen for that shot:
+```js
+{ set: 'hospital', env: 'day',
+  pose: [[0, POSE('scared', { x: MARK.left[0], z: MARK.left[1], ry: facing(MARK.left, MARK.right) })]],   // the hero
+  face: [[0, { wide: 1 }]],
+  cast: { doctor: { pose: [[0, POSE('shrug', { x: MARK.right[0], z: MARK.right[1], ry: facing(MARK.right, MARK.left) })]],
+                    face: [[0, { brow: -0.3 }]], update: ({ u, t, pose, face, props }) => {} } },
+  cam: (u) => dolly(u, D[1], [0, 2.6, 11.2], [0, 2.6, 10.6], [-0.05, 2.2, 1.2]) }
+```
+Leave out the shot's own `pose`/`face` to cut away from the hero (e.g. a close-up of the doctor alone).
+
+- `MARK`: stage spots clear of every set's furniture: `center`, `left`, `right` (two-shot, camera z≈11), `farLeft`,
+  `farRight` (groups, camera z≈14), `backLeft`, `backRight` (behind, for depth), `front`.
+- `facing(from, to, cheat = 0.5)`: the `ry` that turns someone toward another person. It half-turns by default so
+  faces stay readable on a phone; `cheat = 1` gives a true profile.
+- **Lip sync:** in `script.json`, a line with `"speaker": "doctor"` makes the doctor's mouth follow the voice
+  automatically (on top of their face keyframes). A name tag from `script.json` `cast.doctor.name` shows under the captions.
+  Frame the speaker's face during their line.
 
 ## 5a. Sets (locations)
 

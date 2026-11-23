@@ -14,6 +14,8 @@ L = script['lines']
 lines = [l['text'] for l in L]
 moods = [l.get('mood', 'bright') for l in L]
 labels = [l.get('label') for l in L]
+speakers = [l.get('speaker') for l in L]   # None = narrator; else a cast name from episode.js (lip-synced)
+cast_meta = script.get('cast') or {}
 
 
 def read_wav(p):
@@ -80,9 +82,19 @@ for li, (text, v, s0) in enumerate(zip(lines, voices, starts)):
         for w, x, y in zip(ws, edges[:-1], edges[1:]):
             words_out.append({'w': w, 's': round(s0 + x, 3), 'e': round(s0 + y, 3), 'line': li})
 
+# lip-sync envelope: voice loudness per video frame, 0..1
+nf = int(total * FPS) + 1
+mouth = []
+for f in range(nf):
+    a, b = int(f / FPS * SR), int((f + 1) / FPS * SR)
+    mouth.append(float(np.sqrt(np.mean(voice[a:b] ** 2))) if b <= N and b > a else 0.0)
+mouth = np.array(mouth); ref = np.percentile(mouth[mouth > 0.01], 90) if (mouth > 0.01).any() else 1.0
+mouth = [round(float(x), 3) for x in np.where(mouth / ref < 0.1, 0, np.clip(mouth / ref, 0, 1))]
+
 json.dump({'fps': FPS, 'duration': round(total, 3), 'starts': [round(s, 3) for s in starts],
            'lineEnds': [round(e, 3) for e in ends], 'lines': lines, 'labels': labels, 'moods': moods,
-           'words': words_out, 'brand': {k: brand[k] for k in ('handle', 'name', 'cta') if brand.get(k)} or None,
+           'words': words_out, 'speakers': speakers if any(speakers) else None,
+           'speakerNames': {k: v.get('name', k) for k, v in cast_meta.items()} or None, 'mouth': mouth, 'brand': {k: brand[k] for k in ('handle', 'name', 'cta') if brand.get(k)} or None,
            'endCard': {'start': round(end_start, 3), 'seconds': end_secs} if end_secs else None},
           open('timeline.json', 'w'), indent=1)
 

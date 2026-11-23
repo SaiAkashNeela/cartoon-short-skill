@@ -10,10 +10,20 @@ IFS=- read -r LOC NAME QUAL <<< "$V"; LANG2="${LOC%%_*}"
 for f in "$V.onnx" "$V.onnx.json"; do
   [ -s "$CACHE/$f" ] || curl -sSL -o "$CACHE/$f" "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/$LANG2/$LOC/$NAME/$QUAL/$f"
 done
-python3 - "$CACHE/$V.onnx" <<'PY'
-import json, subprocess, sys
-for i, l in enumerate(json.load(open('script.json'))['lines']):
-    subprocess.run([sys.executable, '-m', 'piper', '-m', sys.argv[1], '-f', f'vo_raw/{i}.wav', '--length-scale', '0.95', '--sentence-silence', '0.25'],
+# each cast member can have its own voice: script.json "cast": { "doctor": { "piper": "en_US-lessac-high" } }
+python3 - "$CACHE" "$V" <<'PY'
+import json, os, subprocess, sys
+cache, default = sys.argv[1], sys.argv[2]
+s = json.load(open('script.json')); cast = s.get('cast') or {}
+def model(v):
+    loc, name, qual = v.split('-'); lang = loc.split('_')[0]
+    for f in (v + '.onnx', v + '.onnx.json'):
+        if not os.path.exists(os.path.join(cache, f)):
+            subprocess.run(['curl', '-sSL', '-o', os.path.join(cache, f), f'https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/{lang}/{loc}/{name}/{qual}/{f}'], check=True)
+    return os.path.join(cache, v + '.onnx')
+for i, l in enumerate(s['lines']):
+    v = (cast.get(l.get('speaker')) or {}).get('piper') or default
+    subprocess.run([sys.executable, '-m', 'piper', '-m', model(v), '-f', f'vo_raw/{i}.wav', '--length-scale', '0.95', '--sentence-silence', '0.25'],
                    input=l['text'].encode(), check=True, capture_output=True)
-    print('voiced line', i)
+    print('voiced line', i, 'with', v)
 PY

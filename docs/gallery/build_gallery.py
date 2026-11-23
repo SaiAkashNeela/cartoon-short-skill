@@ -23,24 +23,26 @@ subprocess.run(['npm', 'install', '--silent', '--no-audit', '--no-fund'], cwd=WO
 EPISODE_JS = """
 const DATA = %s;
 export const character = %s;
+export const cast = %s;
 export default function ({ POSE, fx }) {
+  const one = (c) => ({ pose: [[0, POSE(c.pose, c.over || {})]], face: [[0, c.face || {}]], update: c.fx ? ({ t, pose }) => fx[c.fx](pose, t) : undefined });
   return { blinks: [], punch: false, shots: DATA.map((s) => ({
-    env: s.env, set: s.set || 'field', pose: [[0, POSE(s.pose, s.over || {})]], face: [[0, s.face || {}]],
+    env: s.env, set: s.set || 'field',
+    pose: s.hero === false ? undefined : [[0, POSE(s.pose, s.over || {})]], face: [[0, s.face || {}]],
+    cast: s.cast ? Object.fromEntries(Object.entries(s.cast).map(([n, c]) => [n, one(c)])) : undefined,
     cam: () => ({ p: s.p, l: s.l }),
     update: ({ t, pose, props }) => { if (s.fx) fx[s.fx](pose, t); if (s.mug) { props.mug = 1; props.mugTilt = s.pose === 'sip' ? -0.9 : 0; } }
   })) };
 }
 """
-
-
-def render(shots, character=None):
+def render(shots, character=None, cast=None):
     """Render one still per shot; returns list of PIL images."""
     n = len(shots)
     starts = [i * 2 + 0.3 for i in range(n)]
     tl = {'fps': 30, 'duration': n * 2, 'starts': starts, 'lineEnds': [s + 1 for s in starts],
           'lines': [''] * n, 'labels': [None] * n, 'moods': [], 'words': []}
     json.dump(tl, open(os.path.join(WORK, 'timeline.json'), 'w'))
-    open(os.path.join(WORK, 'episode.js'), 'w').write(EPISODE_JS % (json.dumps(shots), json.dumps(character or {})))
+    open(os.path.join(WORK, 'episode.js'), 'w').write(EPISODE_JS % (json.dumps(shots), json.dumps(character or {}), json.dumps(cast or {})))
     times = [f'{i * 2 + 1.0:.2f}' for i in range(n)]
     subprocess.run(['node', 'render.mjs', 'stills', *times], cwd=WORK, check=True)
     return [Image.open(os.path.join(WORK, 'stills', f't_{t}.jpg')).convert('RGB') for t in times]
@@ -75,6 +77,37 @@ def sheet(name, title, subtitle, tiles, cols, crop=None, tile_w=300):
 MED = dict(p=[0.9, 2.3, 7.4], l=[-0.1, 1.95, 0.9], env='day')
 ONLY = set(filter(None, os.environ.get('GALLERY_ONLY', '').split(',')))   # e.g. GALLERY_ONLY=sets for quick iteration
 want = lambda name: not ONLY or name in ONLY
+
+# ---- cast: supporting characters, one per tile, plus two group scenes ----
+if want('cast'):
+    LOOKS = {
+        'doctor': {'coat': '#ffffff', 'hoodie': '#4a7fc1', 'hat': 'hair', 'hair': '#2b1d14', 'glasses': True},
+        'nurse': {'coat': '#7fc8c0', 'hoodie': '#5aa9a0', 'hat': 'bun', 'hair': '#5a3a22', 'lashes': True},
+        'boss': {'top': 'shirt', 'hoodie': '#f4f1ea', 'hoodieDark': '#d9d4c8', 'tie': '#e2493b', 'hat': 'none', 'mustache': True, 'hair': '#4a4a52', 'legs': '#2d3a5a', 'height': 1.06},
+        'coworker': {'top': 'shirt', 'hoodie': '#6b45c6', 'hoodieDark': '#5233a0', 'hat': 'longHair', 'hair': '#a8642a', 'glasses': True, 'lashes': True},
+        'kid': {'hat': 'cap', 'beanie': '#e2493b', 'beanieBand': '#ffffff', 'hoodie': '#f4c430', 'hoodieDark': '#e0a91c', 'height': 0.72},
+        'grandpa': {'top': 'shirt', 'hoodie': '#9a6a3e', 'hoodieDark': '#7a5230', 'hat': 'none', 'hair': '#d9d9df', 'mustache': True, 'glasses': True, 'height': 0.95},
+        'friend': {'hat': 'cap', 'beanie': '#3f8f4f', 'beanieBand': '#2f6f3c', 'hoodie': '#26252e', 'hoodieDark': '#18171e'},
+        'mom': {'top': 'shirt', 'hoodie': '#e8655a', 'hoodieDark': '#c84d43', 'hat': 'longHair', 'hair': '#2b1d14', 'lashes': True},
+    }
+    for i in range(8): LOOKS[f'p{i}'] = {'random': i + 3}
+    LOOKS['boss2'] = LOOKS['boss']
+    ROLE = {'doctor': ('think', {'brow': 0.2}), 'nurse': ('idle', {'smile': .5}), 'boss': ('point', {'brow': 1, 'smile': -.6, 'eyeOpen': .7}),
+            'coworker': ('shrug', {'browA': -24}), 'kid': ('wave', {'smile': 1, 'blush': .6}), 'grandpa': ('hips', {'smile': .4, 'eyeOpen': .7}),
+            'friend': ('cheer', {'eyeOpen': .05, 'open': .6, 'smile': 1}), 'mom': ('hips', {'brow': .5, 'smile': -.3})}
+    SOLO = dict(p=[0.6, 2.3, 7.4], l=[-0.1, 1.95, 0.9])
+    shots = [dict(SOLO, set='field', env='day', hero=False, pose='idle', cast={n: {'pose': po, 'face': fa, 'over': {'x': -0.1, 'z': 0.9}, 'fx': 'wave' if po == 'wave' else None}}) for n, (po, fa) in ROLE.items()]
+    crowd = {f'p{i}': {'pose': ['idle', 'think', 'hips', 'shrug'][i % 4], 'face': {'smile': (i % 3) * .4 - .2}, 'over': {'x': x, 'z': z, 'ry': .35 if x < 0 else -.35}}
+             for i, (x, z) in enumerate([[-2.3, 0.2], [-1.2, -0.6], [1.0, -0.6], [2.1, 0.2], [-2.0, 2.2], [1.9, 2.2], [-0.6, -1.4], [0.6, -1.5]])}
+    shots.append(dict(set='street', env='dusk', pose='tired', face={'eyeOpen': .45, 'bags': .8, 'smile': -.2}, over={'x': -0.1, 'z': 1.0}, cast=crowd, p=[0.3, 3.4, 13.5], l=[0, 1.9, 0.3]))
+    shots.append(dict(set='office', env='day', pose='scared', face={'wide': 1, 'sweat': 1, 'brow': -.5}, over={'x': -0.1, 'z': 1.7},
+                      cast={'boss': {'pose': 'point', 'face': {'brow': 1, 'smile': -.7, 'open': .5, 'mouthW': .8}, 'over': {'x': 1.1, 'z': 0.9, 'ry': -0.6}},
+                            'coworker': {'pose': 'shrug', 'face': {'browA': -24}, 'over': {'x': -1.3, 'z': 0.8, 'ry': 0.5}}}, p=[0.0, 2.7, 11.5], l=[-0.1, 2.1, 0.9]))
+    ims = render(shots, cast=LOOKS)
+    names = list(ROLE) + ['crowd (street)', 'scene (office)']
+    codes = [f"cast.{n}" for n in ROLE] + ["{ random: seed } x8", "hero + boss + coworker"]
+    sheet('cast.jpg', 'Cast', "Supporting characters — export const cast = { name: look }, then add them per shot with cast: { name: {...} }",
+          [(im, n, c) for im, n, c in zip(ims, names, codes)], cols=5, crop=(0, 160, 1080, 1760), tile_w=260)
 
 # ---- sets (locations) ----
 if want('sets'):
@@ -199,6 +232,6 @@ if len(sys.argv) > 2:
                   gif='preview-coffee.gif', gif_span=(29.5, 9.0))
 
 # the skill ships the sheets Claude should look at while choreographing
-for f in ('poses.jpg', 'faces.jpg', 'outfits.jpg', 'environments.jpg', 'sets.jpg'):
+for f in ('poses.jpg', 'faces.jpg', 'outfits.jpg', 'environments.jpg', 'sets.jpg', 'cast.jpg'):
     if os.path.exists(os.path.join(OUT, f)): shutil.copy(os.path.join(OUT, f), os.path.join(ROOT, 'cartoon-shorts', 'references', f))
 shutil.rmtree(WORK)

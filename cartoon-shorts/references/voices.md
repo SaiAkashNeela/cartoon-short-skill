@@ -35,3 +35,14 @@ Other narrators that suit this format (search with `list_voices(language="en", q
 `~/.cache/piper-voices` (from huggingface.co, ~120 MB for `en_US-ryan-high`), and voices every line. Quality is
 decent but flatter than Cartesia. Other voices: `en_US-lessac-high`, `en_GB-alan-medium`, and so on (any name from
 the rhasspy/piper-voices repo).
+
+## Dialogue: characters with their own voices
+
+Lines with `"speaker": "<name>"` are spoken by that cast member. Give each speaking character a distinct voice in
+`script.json`, and generate their lines with it instead of the narrator's:
+```json
+"cast": { "doctor": { "name": "Dr. Patel", "voice_id": "<cartesia voice id>", "piper": "en_US-lessac-high" } }
+```
+Find voices with `list_voices(language="en", gender=..., q=...)`. Match the character (a calm older doctor, an excitable
+kid, a gruff boss) and make sure they sound clearly different from the narrator. `tts_piper.sh` uses each cast member's
+`piper` voice automatically.

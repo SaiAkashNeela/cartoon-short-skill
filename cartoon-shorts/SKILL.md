@@ -4,7 +4,7 @@ license: MIT (see LICENSE). Copyright (c) 2026 Sai Akash Neela
 metadata:
   author: Sai Akash Neela
   homepage: https://github.com/SaiAkashNeela/cartoon-short-skill
-description: Make vertical 9:16 animated "what if" / explainer Shorts (YouTube Shorts, TikTok, Reels) starring a toon-shaded 3D cartoon character with a big expressive face, moving through story-matched locations (bedroom, kitchen, office, street, hospital, space, beach, field), narrated voiceover, procedural music/SFX and bold word-by-word captions — rendered entirely in code with Three.js + headless Chromium + ffmpeg (no Remotion, no AI video generation). Use this whenever the user wants a cartoon short, a faceless animated story video, a "what if you..." / "what happens when..." video, a stickman-style explainer, an animated narration with a character, or "another episode" of their cartoon series — even if they only give a topic like "do one about drinking only coffee for a week".
+description: Make vertical 9:16 animated "what if" / explainer Shorts (YouTube Shorts, TikTok, Reels), 20–90 s, starring a toon-shaded 3D cartoon character with a big expressive face plus any supporting cast the story needs (doctors, bosses, friends, crowds, with optional lip-synced dialogue), moving through story-matched locations (bedroom, kitchen, office, street, hospital, space, beach, field), narrated voiceover, procedural music/SFX and bold word-by-word captions — rendered entirely in code with Three.js + headless Chromium + ffmpeg (no Remotion, no AI video generation). Use this whenever the user wants a cartoon short, a faceless animated story video, a "what if you..." / "what happens when..." video, a stickman-style explainer, an animated narration with a character, or "another episode" of their cartoon series — even if they only give a topic like "do one about drinking only coffee for a week".
 ---
 
 # Cartoon Shorts
@@ -21,7 +21,7 @@ The skill lives in this folder:
   the coffee one shows props (mug, cup pyramid), word-anchored SFX cues and a mug held through every pose
 - `references/episode-api.md` — **read before writing `episode.js`**: poses, face params, envs, props, cameras
 - `references/voices.md` — Cartesia voice details and the free Piper fallback
-- `references/sets.jpg`, `poses.jpg`, `faces.jpg`, `outfits.jpg`, `environments.jpg` — rendered sheets of every location, pose,
+- `references/cast.jpg`, `sets.jpg`, `poses.jpg`, `faces.jpg`, `outfits.jpg`, `environments.jpg` — rendered sheets of every location, pose,
   expression, outfit preset and lighting look; view them when choreographing
 
 ## The character: Beanie
@@ -45,10 +45,31 @@ author; never copy it into someone else's video. `new_project.sh` strips it from
 
 ## The model: one shot per narrated line
 
-A video is 4–7 narrated lines. Each line is one shot: the camera cuts (with a whoosh + flash + zoom punch)
+A video is 4–14 lines (20–90 s). Each line is one shot: the camera cuts (with a whoosh + flash + zoom punch)
 0.3 s before the line starts. Per shot you choose **where it happens (set)**, the time of day (env), keyframe the
 character's pose and face, and give a camera move. Keyframes can be anchored to the exact moment a word is spoken (`at(line, 'word')`),
 which is what makes the comedy timing land — e.g. the character nods off exactly on "switching off".
+
+## Cast: put the other people in the story on screen
+
+If the story involves other people (a doctor, a boss, a friend, parents, a crowd), show them. A beat like "the doctor
+tells you…" lands much harder with a doctor in the frame. Declare them once in `episode.js` (`export const cast = {...}`)
+and add them to any shot with `cast: { name: { pose, face, update } }`. There's no limit on the number of people; crowds
+come from `{ random: <seed> }` looks. Beanie (the `hero`) stays the protagonist; leave out a shot's `pose` to cut away
+from him entirely.
+
+- **Looks:** each person is a look: outfit colours, `top: 'hoodie' | 'shirt'`, `coat` (lab coat / scrubs colour),
+  `tie`, `hat: 'beanie' | 'cap' | 'hair' | 'longHair' | 'bun' | 'none'`, `hair` colour, `glasses`, `mustache`, `lashes`,
+  and `height` (0.7 for a kid). Make roles readable at a glance: white coat + glasses = doctor, shirt + tie = boss,
+  small + cap = kid. `references/cast.jpg` shows examples; `episode-api.md` lists every field.
+- **Who talks:** narration is the default. When a character should say something, write the line in their voice and
+  set `"speaker": "<name>"` on it. They get their own Cartesia voice (`script.json` `"cast": { "<name>": { "name": "Dr. Patel",
+  "voice_id": "…" } }`), their mouth moves with the audio automatically, and a name tag shows under the captions.
+  Keep most lines as narration; one or two spoken lines per video is plenty.
+- **Framing:** a portrait frame is narrow. Two people: stand them on `MARK.left` / `MARK.right` and shoot from z≈11. Groups:
+  use `farLeft`/`farRight` and the `back*` marks and shoot from z≈14, or stagger people in depth. Turn people toward
+  each other with `facing(from, to)`, which only half-turns them so faces stay readable. **Always show the speaker's
+  face**: frame them three-quarter or front-on, never from behind.
 
 ## Locations: match the set to the story
 
@@ -85,9 +106,13 @@ Good Shorts scripts are short and visual:
 - 3–5 escalation beats, each something the character can *physically show* (stretch smugly, nod off, recoil
   in fear, collapse). If a line has no visual action, rewrite it.
 - A punchy closing line, then ~2.5 s of tail for the payoff animation.
-- Total 20–45 s. Plain spoken English; facts should be true (Shorts get fact-checked in the comments).
+- Total 20–90 s (4–14 lines). 30–60 s suits most topics; go longer only when the story has enough beats to escalate,
+  because a long video with a flat middle loses viewers. Plain spoken English; facts should be true (Shorts get
+  fact-checked in the comments).
 - Optional per line: `label` (big pop-in text like "DAY 3"), `mood` (`bright` | `calm` | `eerie` | `tense`, drives
-  the music), `emotion` (passed to Cartesia). Optional `sfx` cues: `{type: pop|whoosh|thud|ding|boing, line, at: start|end, offset}`.
+  the music), `emotion` (passed to Cartesia), `speaker` (a cast name: that character says the line, lip-synced).
+  Optional `sfx` cues: `{type: pop|whoosh|thud|ding|boing, line, at: start|end, offset}`. Optional `cast` metadata for
+  speakers: `{ "<name>": { "name": "Shown on the tag", "voice_id": "<cartesia id>", "piper": "<piper voice>" } }`.
 
 Copy the shape of `examples/stopped-sleeping/script.json`. Show the user the script before spending voice credits
 if they haven't already approved the topic/wording — it's cheap to change now and expensive after rendering.
@@ -102,14 +127,16 @@ Then overwrite `<proj>/script.json` with your script (keep the example `episode.
 - **Cartesia (preferred when the Cartesia MCP is connected):** one `text_to_speech` call per line with
   `output_format {container: wav, encoding: pcm_s16le, sample_rate: 44100}`, `language: en`, and the line's
   `emotion`; then `curl -sSL -o <proj>/vo_raw/<i>.wav <download_url>`. Default narrator: Darius
-  `23112795-d54e-4560-9568-791a87c30201`. Details and alternatives in `references/voices.md`.
-- **Free fallback:** `$SKILL/scripts/tts_piper.sh <proj>` (offline neural voice, ~120 MB model download once).
+  `23112795-d54e-4560-9568-791a87c30201`. Lines with a `speaker` use that character's `voice_id`; pick a voice that
+  clearly differs from the narrator (gender, age, accent). Details and alternatives in `references/voices.md`.
+- **Free fallback:** `$SKILL/scripts/tts_piper.sh <proj>` (offline neural voice, ~120 MB model download once; a cast
+  member's `piper` field gives them their own voice).
 
 ```bash
 SPEED=1.08 $SKILL/scripts/prep_voice.sh <proj>   # trims silence (+ optional pitch-safe speed-up) -> vo/<i>.wav
 cd <proj> && python3 audio.py           # -> timeline.json (word timings, labels) + audio.wav (voice+music+sfx)
 ```
-Aim for 25–45 s; if the narration runs long, re-run `prep_voice.sh` with `SPEED=1.05–1.1` rather than re-voicing.
+Stay within 90 s; if the narration runs long, re-run `prep_voice.sh` with `SPEED=1.05–1.1` rather than re-voicing.
 `audio.py` prints each line's start/end. Word timings come from detecting the pauses in each line and mapping them
 to its punctuation, so punctuate the script the way it should be spoken.
 
@@ -133,7 +160,7 @@ and the expression reads at phone size. Fix and re-run — a still costs ~1 s, t
 $SKILL/scripts/render_all.sh <proj> final.mp4      # parallel workers, then mux with audio.wav
 ```
 Rendering is CPU WebGL (SwiftShader): ~1–4 s per frame per worker, so a 30 s video (900 frames) takes roughly
-10–20 min. Run it in the background and wait on its completion rather than polling. Afterwards spot-check a
+10–20 min and a 90 s video roughly 45–60 min; more people and indoor sets cost a little more per frame. Run it in the background and wait on its completion rather than polling. Afterwards spot-check a
 few frames from the MP4 (`ffmpeg -ss <t> -i final.mp4 -frames:v 1 x.jpg`) and deliver the file (SendUserFile when available).
 
 ## Gotchas

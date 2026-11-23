@@ -16,6 +16,8 @@
     -webkit-text-stroke: 20px #0d0d10;
     text-shadow: 0 8px 0 #0d0d10, 0 14px 22px rgba(0,0,0,0.45); }
   #cap span.on { color: #ffd93b; }
+  #spk { position: absolute; left: 0; right: 0; top: 1412px; text-align: center; opacity: 0; font-family: 'Inter', sans-serif; font-weight: 800; }
+  #spk b { display: inline-block; font-size: 40px; letter-spacing: 2px; color: #15131a; background: #ffffff; padding: 8px 26px; border-radius: 999px; border: 6px solid #0d0d10; }
   #day { position: absolute; left: 0; right: 0; top: 300px; text-align: center;
     font-family: 'Inter', sans-serif; font-weight: 800; font-size: 150px; color: #ffd93b;
     letter-spacing: 4px; paint-order: stroke fill; -webkit-text-stroke: 24px #0d0d10;
@@ -43,6 +45,7 @@
 <div id="stage">
   <div id="vignette"></div>
   <div id="day"></div>
+  <div id="spk"><b></b></div>
   <div id="cap"></div>
   <div id="wm"></div>
   <div id="end"><canvas width="320" height="320"></canvas><div class="name"></div><div class="handle"></div><div class="cta"></div></div>
@@ -310,40 +313,23 @@ const { sets: SETS, moons: WINDOW_MOONS } = buildSets({ THREE, mesh, toon, skyU 
 SETS.field = { group: fieldSet, outdoor: true };
 for (const k in SETS) scene.add(SETS[k].group);
 
-// ---------- character (original design: yellow beanie, blue hoodie) ----------
-const CH = {};
-const char = new THREE.Group(); char.position.set(-0.1, 0, 0.9); scene.add(char);
-const fallPivot = new THREE.Group(); char.add(fallPivot);
-const hips = new THREE.Group(); hips.position.y = 1.0; fallPivot.add(hips);
-const torso = new THREE.Group(); hips.add(torso);
-const LOOK = Object.assign({ hoodie: '#3b78db', hoodieDark: '#2d5fb3', beanie: '#f4c430', beanieBand: '#e0a91c', skin: '#f6f4ef', legs: '#1b1a20', shoe: '#ffffff', sole: '#e2493b' }, EP.character || {});
-const HOODIE = toon(LOOK.hoodie), HOODIE_D = toon(LOOK.hoodieDark), BLACK = toon(LOOK.legs), SKIN = toon(LOOK.skin), BEANIE = toon(LOOK.beanie), SHOE = toon(LOOK.shoe), SOLE = toon(LOOK.sole);
-{
-  const body = mesh(new THREE.CapsuleGeometry(0.34, 0.42, 8, 20), HOODIE, { outline: 0.022 }); body.position.y = 0.52; body.scale.set(1, 1, 0.82); torso.add(body);
-  const pocket = mesh(new THREE.CapsuleGeometry(0.13, 0.22, 4, 12), HOODIE_D, { outline: 0.012 }); pocket.rotation.z = Math.PI / 2; pocket.position.set(0, 0.32, 0.25); pocket.scale.set(1, 1, 0.5); torso.add(pocket);
-  const hood = mesh(new THREE.TorusGeometry(0.26, 0.09, 10, 24), HOODIE_D, { outline: 0.015 }); hood.rotation.x = Math.PI / 2 - 0.3; hood.position.set(0, 0.98, -0.05); torso.add(hood);
-  for (const sx of [-0.08, 0.08]) { const s = mesh(new THREE.CylinderGeometry(0.013, 0.013, 0.26, 6), SKIN); s.position.set(sx, 0.8, 0.27); s.rotation.x = -0.15; torso.add(s); }
-  const neck = mesh(new THREE.CylinderGeometry(0.07, 0.08, 0.2, 8), BLACK); neck.position.y = 1.02; torso.add(neck);
+// ---------- characters ----------
+// makeCharacter(look) builds one rigged, outlined cartoon person with its own procedural face. The hero (Beanie by
+// default) comes from EP.character; extra people come from EP.cast = { name: look }. A look only lists what differs.
+const BASE_LOOK = { hoodie: '#3b78db', hoodieDark: '#2d5fb3', beanie: '#f4c430', beanieBand: '#e0a91c', skin: '#f6f4ef',
+  legs: '#1b1a20', shoe: '#ffffff', sole: '#e2493b', hat: 'beanie', hair: '#3a2a1e', top: 'hoodie', coat: null, tie: null,
+  glasses: false, mustache: false, lashes: false, height: 1 };
+// deterministic variety for crowds: { random: <seed> } picks hair/hat, colours and accessories
+function randomLook(seed, extra = {}) {
+  let r = (seed * 7919 + 13) % 2147483647 || 1; const R = () => (r = (r * 16807) % 2147483647) / 2147483647, pick = (a) => a[Math.floor(R() * a.length)];
+  const tops = [['#d9412b', '#a92f1f'], ['#3f8f4f', '#2f6f3c'], ['#6b45c6', '#5233a0'], ['#f28cb8', '#d66a99'], ['#26252e', '#18171e'], ['#f08a24', '#c96c12'], ['#33a6b8', '#26808e'], ['#8a8f99', '#6b7079']];
+  const [hoodie, hoodieDark] = pick(tops), hat = pick(['hair', 'hair', 'longHair', 'bun', 'cap', 'none', 'beanie', 'longHair']);
+  return Object.assign({ hoodie, hoodieDark, hat, hair: pick(['#2b1d14', '#5a3a22', '#a8642a', '#e3c27a', '#1d1d24', '#9a9aa5']),
+    beanie: pick(['#e2493b', '#3b78db', '#3f8f4f', '#ffffff', '#26252e', '#f4c430']), beanieBand: '#d9d4c8', top: R() < 0.5 ? 'hoodie' : 'shirt',
+    legs: pick(['#1b1a20', '#2d3a5a', '#5a4a3a']), glasses: R() < 0.25, mustache: hat !== 'longHair' && hat !== 'bun' && R() < 0.15,
+    lashes: hat === 'longHair' || hat === 'bun', height: 0.92 + R() * 0.14 }, extra);
 }
-const neck = new THREE.Group(); neck.position.y = 1.05; torso.add(neck);
-const head = new THREE.Group(); head.position.y = 0.52; neck.add(head); CH.head = head;
-const HR = 0.6;
-head.add(mesh(new THREE.SphereGeometry(HR, 48, 32), SKIN, { outline: 0.028 }));
-// face canvas mapped on the front cap of the head
-const faceCanvas = document.createElement('canvas'); faceCanvas.width = faceCanvas.height = 512;
-const fctx = faceCanvas.getContext('2d');
-const faceTex = new THREE.CanvasTexture(faceCanvas); faceTex.colorSpace = THREE.SRGBColorSpace; faceTex.anisotropy = 8;
-const FA = 1.7;
-const faceMesh = new THREE.Mesh(new THREE.SphereGeometry(HR * 1.004, 48, 48, Math.PI / 2 - FA / 2, FA, Math.PI / 2 - FA / 2, FA),
-  new THREE.MeshToonMaterial({ map: faceTex, transparent: true, gradientMap: RAMP, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }));
-head.add(faceMesh);
-// beanie
-{
-  const cap = mesh(new THREE.SphereGeometry(HR * 1.05, 40, 20, 0, Math.PI * 2, 0, Math.PI * 0.42), BEANIE, { outline: 0.025 }); cap.position.y = 0.04; cap.rotation.x = -0.18; head.add(cap);
-  const band = mesh(new THREE.TorusGeometry(HR * 0.86, 0.085, 10, 40), toon(LOOK.beanieBand), { outline: 0.018 }); band.rotation.x = Math.PI / 2 - 0.18; band.position.set(0, 0.3, -0.04); head.add(band);
-  const pom = mesh(new THREE.IcosahedronGeometry(0.13, 1), BEANIE, { outline: 0.018 }); pom.position.set(0, HR * 1.12, -0.14); head.add(pom);
-}
-// limbs
+const HR = 0.6, FA = 1.7;
 function limb(parent, x, y, len1, len2, r, mat, end) {
   const upper = new THREE.Group(); upper.position.set(x, y, 0); parent.add(upper);
   const u = mesh(new THREE.CapsuleGeometry(r, len1 - r, 4, 10), mat, { outline: 0.014 }); u.position.y = -len1 / 2; upper.add(u);
@@ -352,17 +338,78 @@ function limb(parent, x, y, len1, len2, r, mat, end) {
   const tip = end(); tip.position.y = -len2 - 0.03; lower.add(tip);
   return { upper, lower, tip };
 }
-const hand = () => mesh(new THREE.SphereGeometry(0.105, 16, 12), SKIN, { outline: 0.014 });
-const foot = () => {
-  const g = new THREE.Group();
-  const s = mesh(new THREE.SphereGeometry(0.15, 16, 12), SHOE, { outline: 0.014 }); s.scale.set(0.85, 0.6, 1.35); s.position.set(0, -0.02, 0.07); g.add(s);
-  const so = mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.04, 16), SOLE); so.scale.set(0.95, 1, 1.5); so.position.set(0, -0.09, 0.07); g.add(so);
-  return g;
-};
-CH.armA = limb(torso, -0.4, 0.86, 0.44, 0.42, 0.075, HOODIE, hand);
-CH.armB = limb(torso, 0.4, 0.86, 0.44, 0.42, 0.075, HOODIE, hand);
-CH.legA = limb(hips, -0.15, 0.05, 0.48, 0.46, 0.05, BLACK, foot);
-CH.legB = limb(hips, 0.15, 0.05, 0.48, 0.46, 0.05, BLACK, foot);
+let charCount = 0;
+function makeCharacter(look = {}) {
+  const L = look.random !== undefined ? randomLook(look.random, look) : Object.assign({}, BASE_LOOK, look);
+  for (const k in BASE_LOOK) if (L[k] === undefined) L[k] = BASE_LOOK[k];
+  const C = { look: L, idx: charCount++ };
+  const root = new THREE.Group(); root.position.set(-0.1, 0, 0.9); scene.add(root);
+  const scaled = new THREE.Group(); scaled.scale.setScalar(L.height); root.add(scaled);
+  const fallPivot = new THREE.Group(); scaled.add(fallPivot);
+  const hips = new THREE.Group(); hips.position.y = 1.0; fallPivot.add(hips);
+  const torso = new THREE.Group(); hips.add(torso);
+  const TOP = toon(L.coat || L.hoodie), TOP_D = toon(L.coat ? '#d5dae1' : L.hoodieDark), LEGS = toon(L.legs), SKIN = toon(L.skin),
+    HAT = toon(L.beanie), HAT2 = toon(L.beanieBand), HAIR = toon(L.hair), SHOE = toon(L.shoe), SOLE = toon(L.sole);
+  // torso: hoodie (hood + strings + pouch), shirt (collar), or a long lab coat over a coloured shirt
+  if (L.coat) {
+    const body = mesh(new THREE.CapsuleGeometry(0.37, 0.66, 8, 20), TOP, { outline: 0.022 }); body.position.y = 0.42; body.scale.set(1, 1, 0.84); torso.add(body);
+    const shirt = mesh(new THREE.CapsuleGeometry(0.1, 0.42, 4, 12), toon(L.hoodie), { outline: 0.01 }); shirt.position.set(0, 0.66, 0.27); shirt.scale.set(1, 1, 0.4); torso.add(shirt);
+    const pocket = mesh(new THREE.BoxGeometry(0.16, 0.12, 0.04), TOP_D, { outline: 0.008 }); pocket.position.set(-0.17, 0.62, 0.3); torso.add(pocket);
+  } else {
+    const body = mesh(new THREE.CapsuleGeometry(0.34, 0.42, 8, 20), TOP, { outline: 0.022 }); body.position.y = 0.52; body.scale.set(1, 1, 0.82); torso.add(body);
+    if (L.top === 'hoodie') {
+      const pocket = mesh(new THREE.CapsuleGeometry(0.13, 0.22, 4, 12), TOP_D, { outline: 0.012 }); pocket.rotation.z = Math.PI / 2; pocket.position.set(0, 0.32, 0.25); pocket.scale.set(1, 1, 0.5); torso.add(pocket);
+      const hood = mesh(new THREE.TorusGeometry(0.26, 0.09, 10, 24), TOP_D, { outline: 0.015 }); hood.rotation.x = Math.PI / 2 - 0.3; hood.position.set(0, 0.98, -0.05); torso.add(hood);
+      for (const sx of [-0.08, 0.08]) { const st = mesh(new THREE.CylinderGeometry(0.013, 0.013, 0.26, 6), SKIN); st.position.set(sx, 0.8, 0.27); st.rotation.x = -0.15; torso.add(st); }
+    }
+  }
+  if (L.top === 'shirt' || L.coat) for (const sx of [-1, 1]) { const c = mesh(new THREE.BoxGeometry(0.16, 0.05, 0.12), L.coat ? TOP : TOP_D, { outline: 0.008 }); c.position.set(sx * 0.09, 0.96, 0.2); c.rotation.set(0.5, 0, sx * 0.5); torso.add(c); }
+  if (L.tie) { const T = toon(L.tie); const knot = mesh(new THREE.BoxGeometry(0.08, 0.07, 0.05), T, { outline: 0.006 }); knot.position.set(0, 0.92, 0.27); torso.add(knot);
+    const tie = mesh(new THREE.BoxGeometry(0.09, 0.38, 0.03), T, { outline: 0.008 }); tie.position.set(0, 0.7, 0.3); tie.rotation.x = -0.12; torso.add(tie); }
+  const neckM = mesh(new THREE.CylinderGeometry(0.07, 0.08, 0.2, 8), LEGS); neckM.position.y = 1.02; torso.add(neckM);
+  const neck = new THREE.Group(); neck.position.y = 1.05; torso.add(neck);
+  const head = new THREE.Group(); head.position.y = 0.52; neck.add(head);
+  head.add(mesh(new THREE.SphereGeometry(HR, 48, 32), SKIN, { outline: 0.028 }));
+  // face: a canvas mapped on the front cap of the head, redrawn when the expression changes
+  const faceCanvas = document.createElement('canvas'); faceCanvas.width = faceCanvas.height = 512;
+  const faceTex = new THREE.CanvasTexture(faceCanvas); faceTex.colorSpace = THREE.SRGBColorSpace; faceTex.anisotropy = 8;
+  head.add(new THREE.Mesh(new THREE.SphereGeometry(HR * 1.004, 48, 48, Math.PI / 2 - FA / 2, FA, Math.PI / 2 - FA / 2, FA),
+    new THREE.MeshToonMaterial({ map: faceTex, transparent: true, gradientMap: RAMP, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 })));
+  // hair / hats
+  const capTop = (r, theta, mat, tilt = 0) => { const m = mesh(new THREE.SphereGeometry(HR * r, 40, 20, 0, Math.PI * 2, 0, Math.PI * theta), mat, { outline: 0.022 }); m.rotation.x = tilt; head.add(m); return m; };
+  if (L.hat === 'beanie') {
+    const cap = capTop(1.05, 0.42, HAT, -0.18); cap.position.y = 0.04;
+    const band = mesh(new THREE.TorusGeometry(HR * 0.86, 0.085, 10, 40), HAT2, { outline: 0.018 }); band.rotation.x = Math.PI / 2 - 0.18; band.position.set(0, 0.3, -0.04); head.add(band);
+    const pom = mesh(new THREE.IcosahedronGeometry(0.13, 1), HAT, { outline: 0.018 }); pom.position.set(0, HR * 1.12, -0.14); head.add(pom);
+  } else if (L.hat === 'cap') {
+    capTop(1.04, 0.37, HAT, -0.08);
+    const brim = mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.035, 28), HAT2, { outline: 0.012 }); brim.scale.set(1, 1, 0.75); brim.position.set(0, HR * 0.6, 0.42); brim.rotation.x = 0.16; head.add(brim);
+    const btn = mesh(new THREE.SphereGeometry(0.045, 10, 8), HAT2, { outline: 0.006 }); btn.position.set(0, HR * 1.04, -0.05); head.add(btn);
+  } else if (L.hat === 'hair' || L.hat === 'bun' || L.hat === 'longHair') {
+    capTop(1.035, L.hat === 'longHair' ? 0.38 : 0.35, HAIR, -0.1);
+    if (L.hat === 'hair') for (let i = 0; i < 5; i++) { const tuft = mesh(new THREE.ConeGeometry(0.11, 0.26, 6), HAIR, { outline: 0.01 }); const a = -0.9 + i * 0.45; tuft.position.set(Math.sin(a) * 0.3, HR * 0.95, 0.12 + Math.cos(a) * 0.12); tuft.rotation.set(0.5, 0, -a * 0.6); head.add(tuft); }
+    if (L.hat === 'bun') { const bun = mesh(new THREE.SphereGeometry(0.2, 18, 12), HAIR, { outline: 0.014 }); bun.position.set(0, HR * 1.08, -0.16); head.add(bun); }
+    if (L.hat === 'longHair') {
+      const back = mesh(new THREE.CapsuleGeometry(0.5, 0.45, 8, 16), HAIR, { outline: 0.02 }); back.position.set(0, -0.12, -0.2); back.scale.set(1.18, 1, 0.72); head.add(back);
+      for (const sx of [-1, 1]) { const lock = mesh(new THREE.CapsuleGeometry(0.11, 0.55, 4, 10), HAIR, { outline: 0.012 }); lock.position.set(sx * 0.52, -0.2, 0.02); lock.rotation.z = sx * 0.08; head.add(lock); }
+    }
+  }
+  const hand = () => mesh(new THREE.SphereGeometry(0.105, 16, 12), SKIN, { outline: 0.014 });
+  const foot = () => {
+    const g = new THREE.Group();
+    const sh = mesh(new THREE.SphereGeometry(0.15, 16, 12), SHOE, { outline: 0.014 }); sh.scale.set(0.85, 0.6, 1.35); sh.position.set(0, -0.02, 0.07); g.add(sh);
+    const so = mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.04, 16), SOLE); so.scale.set(0.95, 1, 1.5); so.position.set(0, -0.09, 0.07); g.add(so);
+    return g;
+  };
+  Object.assign(C, { root, fallPivot, hips, torso, head, faceCanvas, faceTex, fctx: faceCanvas.getContext('2d'), faceKey: '',
+    armA: limb(torso, -0.4, 0.86, 0.44, 0.42, 0.075, TOP, hand), armB: limb(torso, 0.4, 0.86, 0.44, 0.42, 0.075, TOP, hand),
+    legA: limb(hips, -0.15, 0.05, 0.48, 0.46, 0.05, LEGS, foot), legB: limb(hips, 0.15, 0.05, 0.48, 0.46, 0.05, LEGS, foot) });
+  return C;
+}
+const LOOK = Object.assign({}, BASE_LOOK, EP.character || {});
+const HERO = makeCharacter(LOOK);
+const CAST = { hero: HERO };
+for (const [name, look] of Object.entries(EP.cast || {})) { if (name === 'hero') throw new Error('"hero" is reserved for the main character'); CAST[name] = makeCharacter(look); CAST[name].root.visible = false; }
 
 // sleeping Z sprites
 function zSprite() {
@@ -406,8 +453,9 @@ const Y_AXIS = new THREE.Vector3(0, 1, 0), mugOff = new THREE.Vector3();
 
 // ---------- face drawing ----------
 const FACE0 = { brow: 0, browY: 0, browA: 0, eyeOpen: 1, wide: 0, lookX: 0, lookY: 0, smile: 0.2, open: 0, mouthW: 1, bags: 0, sweat: 0, blush: 0, sleepy: 0 };
-function drawFace(f) {
-  const g = fctx; g.clearRect(0, 0, 512, 512);
+function drawFace(f, C = HERO) {
+  const key = JSON.stringify(f); if (key === C.faceKey) return; C.faceKey = key;  // only redraw on change
+  const g = C.fctx, L = C.look; g.clearRect(0, 0, 512, 512);
   const INK = '#15131a';
   const cx = 256, ey = 238, ex = 74;
   // blush
@@ -439,6 +487,13 @@ function drawFace(f) {
       if (open < 0.95) { g.strokeStyle = INK; g.lineWidth = 10; g.lineCap = 'round'; g.beginPath(); g.moveTo(x - rx - 8, top + 2); g.lineTo(x + rx + 8, top + 2); g.stroke(); }
     }
   }
+  // lashes / glasses (look accessories)
+  if (L.lashes && f.wide < 0.5 && f.eyeOpen >= 0.12) { g.strokeStyle = INK; g.lineWidth = 7; g.lineCap = 'round';
+    const lt = ey - 38 + (1 - clamp(f.eyeOpen)) * 38 * 1.7;
+    for (const s of [-1, 1]) { const x = cx + s * ex; g.beginPath(); g.moveTo(x + s * 22, lt + 8); g.lineTo(x + s * 40, lt - 6); g.moveTo(x + s * 10, lt + 2); g.lineTo(x + s * 22, lt - 14); g.stroke(); } }
+  if (L.glasses) { g.strokeStyle = INK; g.lineWidth = 8;
+    for (const s of [-1, 1]) { g.beginPath(); g.arc(cx + s * ex, ey, 50, 0, Math.PI * 2); g.stroke(); }
+    g.beginPath(); g.moveTo(cx - ex + 48, ey - 8); g.quadraticCurveTo(cx, ey - 22, cx + ex - 48, ey - 8); g.stroke(); }
   // brows: positive brow => angry (inner ends down)
   g.strokeStyle = INK; g.lineCap = 'round'; g.lineWidth = 17;
   for (const s of [-1, 1]) {
@@ -446,6 +501,8 @@ function drawFace(f) {
     const a = -s * f.brow * 0.5; // canvas rotation
     g.save(); g.translate(x, y); g.rotate(a); g.beginPath(); g.moveTo(-36, 0); g.quadraticCurveTo(0, -10 - f.wide * 6, 36, 0); g.stroke(); g.restore();
   }
+  // moustache
+  if (L.mustache) { g.fillStyle = L.hair; for (const s of [-1, 1]) { g.beginPath(); g.ellipse(cx + s * 30, 306, 34, 14, s * 0.25, 0, Math.PI * 2); g.fill(); } }
   // mouth
   const my = 334, mw = 46 * f.mouthW;  // keep the mouth high: lower on the sphere it foreshortens
   g.lineWidth = 10; g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = INK;
@@ -466,7 +523,7 @@ function drawFace(f) {
     const x = 392, y = 150 + (f.sweatY || 0);
     g.beginPath(); g.moveTo(x, y - 34); g.quadraticCurveTo(x + 26, y + 4, x, y + 18); g.quadraticCurveTo(x - 26, y + 4, x, y - 34); g.fill(); g.stroke(); g.globalAlpha = 1;
   }
-  faceTex.needsUpdate = true;
+  C.faceTex.needsUpdate = true;
 }
 
 
@@ -549,7 +606,14 @@ const fx = {
   shake(pose, t, k = 1) { pose.hy += Math.sin(t * 14) * 0.35 * k; },   // "no" head shake
   nodYes(pose, t, k = 1) { pose.hx += Math.sin(t * 11) * 0.2 * k; }
 };
-const ctx = { THREE, TL, S, E, CUT, D, wt, at, dolly, POSE, P, fx, smooth, lerp, clamp, easeOutBack };
+// stage marks that stay clear of every set's furniture (x, z); side marks are in front of beds/desks
+// (a portrait frame is narrow: left/right fit a two-shot from z≈11; far* need a group shot from z≈14)
+const MARK = { center: [-0.1, 0.9], left: [-1.15, 1.5], right: [1.05, 1.5], farLeft: [-2.3, 2.1], farRight: [2.1, 2.1],
+  backLeft: [-1.2, -0.2], backRight: [0.55, -0.6], front: [0.2, 2.6] };
+// ry that turns a character at `from` toward `to`; `cheat` < 1 keeps faces readable by only half-turning (cartoon
+// "cheat to camera"); pass 1 for a true profile
+const facing = (from, to, cheat = 0.5) => Math.atan2(to[0] - from[0], to[1] - from[1]) * cheat;
+const ctx = { THREE, TL, S, E, CUT, D, wt, at, dolly, POSE, P, fx, smooth, lerp, clamp, easeOutBack, MARK, facing };
 const EPI = EP.default(ctx);
 const SHOTS = EPI.shots;
 if (SHOTS.length !== S.length) console.error(`episode has ${SHOTS.length} shots but the script has ${S.length} lines — need exactly one shot per line`);
@@ -564,6 +628,7 @@ const ENVS = {
   storm:   { top: '#3a4450', bot: '#8a949c', sun: '#d8e0e8', si: 1.2, dir: [4, 12, 6], hs: '#9aa6b2', hg: '#3a4a2a', hi: 1.0, fog: '#7f8a94', stars: 0, moon: 0 }
 };
 for (const s of SHOTS) if (!ENVS[s.env]) throw new Error(`unknown env "${s.env}" — available: ${Object.keys(ENVS).join(', ')}`);
+for (const s of SHOTS) for (const n in (s.cast || {})) if (!CAST[n]) throw new Error(`shot uses cast member "${n}" but episode.js exports no cast.${n} (cast: ${Object.keys(CAST).join(', ')})`);
 for (const s of SHOTS) if (s.set && !SETS[s.set]) throw new Error(`unknown set "${s.set}" — available: ${Object.keys(SETS).join(', ')}`);
 
 // automatic blinks (deterministic) unless the episode lists its own
@@ -578,7 +643,7 @@ const chunks = []; {
     if (cur.length >= 3 || /[.,?!]$/.test(w.w) || !next || next.line !== w.line) { chunks.push(cur); cur = []; }
   });
 }
-const capEl = document.getElementById('cap'), dayEl = document.getElementById('day'), flashEl = document.getElementById('flash'), vigEl = document.getElementById('vignette');
+const spkEl = document.getElementById('spk'), capEl = document.getElementById('cap'), dayEl = document.getElementById('day'), flashEl = document.getElementById('flash'), vigEl = document.getElementById('vignette');
 let lastChunk = -1;
 function updateCaptions(t) {
   let idx = -1;
@@ -596,6 +661,10 @@ function updateCaptions(t) {
     const k = clamp((t - c[0].s) / 0.16); const s = 0.6 + 0.4 * easeOutBack(k);
     capEl.style.transform = `scale(${s})`; capEl.style.opacity = clamp(k * 3);
   }
+  // name tag above the captions when a cast member (not the narrator) is speaking
+  const who = idx >= 0 && TL.speakers ? TL.speakers[chunks[idx][0].line] : null;
+  spkEl.style.opacity = who ? 1 : 0;
+  if (who) spkEl.firstChild.textContent = ((TL.speakerNames || {})[who] || who).toUpperCase();
   // big label (e.g. "DAY 1") popping in at the start of a line
   const sh = shotAt(t), lab = (TL.labels || [])[sh];
   if (lab) {
@@ -616,11 +685,11 @@ if (ENDCARD) {
   endEl.querySelector('.cta').textContent = (BRAND.cta || 'Follow for more').toUpperCase();
   if (!BRAND.cta && !BRAND.handle) endEl.querySelector('.cta').style.display = 'none';
   // avatar: the character's own face, drawn flat inside a circle with the beanie on top
-  drawFace(Object.assign({}, FACE0, { smile: 0.9, mouthW: 1.05, blush: 0.5 }));
+  drawFace(Object.assign({}, FACE0, { smile: 0.9, mouthW: 1.05, blush: 0.5 }), HERO);
   const av = endEl.querySelector('canvas').getContext('2d'), cx = 160, cy = 172, R = 130;
   av.save(); av.beginPath(); av.arc(cx, cy, R, 0, Math.PI * 2); av.clip();
   av.fillStyle = LOOK.skin; av.fillRect(0, 0, 320, 320);
-  av.drawImage(faceCanvas, cx - R * 1.12, cy - R * 1.02, R * 2.24, R * 2.24);
+  av.drawImage(HERO.faceCanvas, cx - R * 1.12, cy - R * 1.02, R * 2.24, R * 2.24);
   av.fillStyle = LOOK.beanie; av.fillRect(0, 0, 320, cy - R * 0.42);
   av.fillStyle = LOOK.beanieBand; av.fillRect(0, cy - R * 0.62, 320, R * 0.22);
   av.restore();
@@ -642,16 +711,34 @@ function updateBranding(t) {
 
 // ---------- per-frame ----------
 const tmpV = new THREE.Vector3();
-function applyPose(p) {
-  char.position.set(p.x, 0, p.z); char.rotation.y = p.ry;
-  hips.position.y = 1.0 + p.hipY; hips.rotation.y = p.twist * 0.5;
-  torso.rotation.set(p.lean, p.twist * 0.5, p.side);
-  head.rotation.set(p.hx, p.hy, p.hz);
-  CH.armA.upper.rotation.set(p.aSx, 0, -p.aSz); CH.armA.lower.rotation.set(p.aEx, 0, p.aEz);
-  CH.armB.upper.rotation.set(p.bSx, 0, p.bSz); CH.armB.lower.rotation.set(p.bEx, 0, -p.bEz);
-  CH.legA.upper.rotation.set(p.lHx, 0, -0.03); CH.legA.lower.rotation.set(p.lK, 0, 0);
-  CH.legB.upper.rotation.set(p.rHx, 0, 0.03); CH.legB.lower.rotation.set(p.rK, 0, 0);
-  fallPivot.rotation.x = -1.32 * p.fall;  // fall backwards around the feet
+function applyPose(C, p) {
+  C.root.position.set(p.x, 0, p.z); C.root.rotation.y = p.ry;
+  C.hips.position.y = 1.0 + p.hipY; C.hips.rotation.y = p.twist * 0.5;
+  C.torso.rotation.set(p.lean, p.twist * 0.5, p.side);
+  C.head.rotation.set(p.hx, p.hy, p.hz);
+  C.armA.upper.rotation.set(p.aSx, 0, -p.aSz); C.armA.lower.rotation.set(p.aEx, 0, p.aEz);
+  C.armB.upper.rotation.set(p.bSx, 0, p.bSz); C.armB.lower.rotation.set(p.bEx, 0, -p.bEz);
+  C.legA.upper.rotation.set(p.lHx, 0, -0.03); C.legA.lower.rotation.set(p.lK, 0, 0);
+  C.legB.upper.rotation.set(p.rHx, 0, 0.03); C.legB.lower.rotation.set(p.rK, 0, 0);
+  C.fallPivot.rotation.x = -1.32 * p.fall;  // fall backwards around the feet
+}
+// dialogue: the character named as a line's speaker moves its mouth with the voice (timeline.json "mouth" envelope)
+function lipSync(name, f, t) {
+  const sp = TL.speakers; if (!sp || !TL.mouth) return;
+  for (let i = 0; i < S.length; i++) if (sp[i] === name && t >= S[i] - 0.05 && t <= E[i] + 0.05) {
+    const m = TL.mouth[Math.min(TL.mouth.length - 1, Math.floor(t * TL.fps))] || 0;
+    f.open = Math.max(f.open, m * 0.85); if (m > 0.05) f.mouthW = Math.min(f.mouthW, 0.8);
+  }
+}
+// one character for one frame: keyframes -> life (breathing) -> episode hook -> lip sync -> blinks -> pose + face
+function animate(C, name, spec, u, t, props, base) {
+  const pose = keyed(spec.pose, u, base), face = keyed(spec.face || [[0, {}]], u, FACE0);
+  pose.hipY += Math.sin(t * 2.4 + C.idx * 1.7) * 0.012; pose.hx += Math.sin(t * 1.7 + C.idx * 2.3) * 0.02;
+  if (spec.update) spec.update({ u, t, pose, face, props });
+  lipSync(name, face, t);
+  applyPose(C, pose);
+  if (pose.fall < 0.5 && face.wide < 0.5 && face.eyeOpen > 0.3) for (const b of BLINKS) if (Math.abs(t - b - C.idx * 0.83) < 0.07) face.eyeOpen = 0.05;
+  drawFace(face, C);
 }
 window.setTime = function (t) {
   const sh = shotAt(t), shot = SHOTS[sh], u = t - CUT[sh];
@@ -669,23 +756,23 @@ window.setTime = function (t) {
   windU.value = t;
   clouds.forEach((c) => { c.position.x = c.userData.base.x + t * c.userData.speed; });
 
-  const pose = keyed(shot.pose, u, POSE0);
-  const face = keyed(shot.face, u, FACE0);
-  pose.hipY += Math.sin(t * 2.4) * 0.012;  // breathing
-  pose.hx += Math.sin(t * 1.7) * 0.02;
   const props = { treeEyes: 0, treeLook: Math.sin(u * 0.8), zzz: -1, mug: 0, mugTilt: 0, cups: 0 };
-  if (shot.update) shot.update({ u, t, pose, face, props });
-  applyPose(pose);
-
-  if (pose.fall < 0.5 && face.wide < 0.5 && face.eyeOpen > 0.3) for (const b of BLINKS) if (Math.abs(t - b) < 0.07) face.eyeOpen = 0.05;
-  drawFace(face);
+  // hero: the shot's own pose/face/update (leave out `pose` to cut away from the hero)
+  HERO.root.visible = !!shot.pose;
+  if (shot.pose) animate(HERO, 'hero', shot, u, t, props, POSE0);
+  // everyone else: shot.cast = { name: { pose, face, update } }; people not listed are off-screen
+  for (const name in CAST) {
+    if (name === 'hero') continue;
+    const spec = shot.cast && shot.cast[name]; CAST[name].root.visible = !!spec;
+    if (spec) animate(CAST[name], name, spec, u, t, props, Object.assign({}, POSE0, { x: 1.6, z: 1.4 }));
+  }
 
   // props
   mug.visible = props.mug > 0.5;
   if (mug.visible) {
-    CH.armB.tip.getWorldPosition(tmpV);
-    mugOff.set(0, 0.05, 0.13).applyAxisAngle(Y_AXIS, char.rotation.y);
-    mug.position.copy(tmpV).add(mugOff); mug.rotation.set(props.mugTilt, char.rotation.y, 0);
+    HERO.armB.tip.getWorldPosition(tmpV);
+    mugOff.set(0, 0.05, 0.13).applyAxisAngle(Y_AXIS, HERO.root.rotation.y);
+    mug.position.copy(tmpV).add(mugOff); mug.rotation.set(props.mugTilt, HERO.root.rotation.y, 0);
   }
   cups.forEach((c, i) => { const k = clamp(props.cups - i); c.visible = k > 0.001; c.scale.setScalar(k < 1 ? Math.max(0.01, easeOutBack(k)) : 1); });
   treeEyes.visible = props.treeEyes > 0.001;
@@ -695,7 +782,7 @@ window.setTime = function (t) {
     const on = props.zzz >= 0 && u > st;
     z.visible = on;
     if (on) {
-      head.getWorldPosition(tmpV);
+      HERO.head.getWorldPosition(tmpV);
       z.position.set(tmpV.x + 0.35 + k * 0.5 + Math.sin(k * 4) * 0.12, tmpV.y + 0.6 + k * 0.9, tmpV.z + 0.3);
       const s = 0.25 + k * 0.22; z.scale.set(s, s, s);
       z.material.opacity = clamp(k * 4) * (1 - smooth(1.2, 1.8, k));

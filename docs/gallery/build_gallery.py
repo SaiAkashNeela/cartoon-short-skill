@@ -227,8 +227,8 @@ if len(sys.argv) > 1:
                   gif='preview.gif', gif_span=(8.0, 10.5))
 if len(sys.argv) > 2:
     episode_sheet(sys.argv[2], 'episode-coffee.jpg', 'Example: "What if you drank only coffee for a week?"',
-                  [(1.6, 'Hook', 'sip + props.mug'), (8.6, 'Day 1', 'wired + tremble'), (18.4, 'Day 3', 'spill lurch'),
-                   (23.7, 'Day 5', 'storm + cups'), (31.6, 'Day 7', 'cup pyramid'), (40.5, 'End', 'fallen, wide awake')],
+                  [(1.6, 'Hook', 'kitchen + sip'), (8.6, 'Day 1', 'office, wired'), (18.4, 'Day 3', 'bedroom, spill'),
+                   (23.7, 'Day 5', 'street + storm'), (31.6, 'Day 7', 'kitchen, cup pyramid'), (40.5, 'End', 'hospital, wide awake')],
                   gif='preview-coffee.gif', gif_span=(29.5, 9.0))
 
 # the skill ships the sheets Claude should look at while choreographing

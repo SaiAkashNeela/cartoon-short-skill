@@ -21,7 +21,9 @@ if [ "$cmd" = put ]; then
   cp "$f" "$work/"; msg="Temporary upload: $(basename "$f")"
 else msg="Reset upload branch (no files)"; fi
 git -C "$work" add -A && git -C "$work" commit -qm "$msg"
-for i in 1 2 3 4; do git -C "$work" push -q --force "https://github.com/$repo" "$branch" && break || sleep $((i * 2)); done
+pushed=0
+for i in 1 2 3 4; do git -C "$work" push -q --force "https://github.com/$repo" "$branch" && { pushed=1; break; } || sleep $((i * 2)); done
+[ "$pushed" = 1 ] || { echo "push to $repo:$branch failed (no push access?)" >&2; exit 1; }
 if [ "$cmd" = put ]; then
   url="https://raw.githubusercontent.com/$repo/$(git -C "$work" rev-parse HEAD)/$(basename "$f")"
   for i in $(seq 1 20); do [ "$(curl -s -o /dev/null -w '%{http_code}' -r 0-0 "$url")" = 206 ] && break; sleep 3; done
